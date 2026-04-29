@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HubNOC — Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#070d14;--panel:#0d1a26;--panel2:#111f30;--border:#1a3a5c;
+    --green:#00ff88;--blue:#00aaff;--red:#ff3366;--yellow:#ffcc00;--orange:#ff8800;
+    --text:#c8dde8;--dim:#4a7a9b;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;min-height:100vh;}
+
+  /* Topbar */
+  .topbar{display:flex;align-items:center;justify-content:space-between;
+    padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:100;}
+  .topbar-left{display:flex;align-items:center;gap:16px;}
+  .logo{font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--blue);
+    letter-spacing:3px;}
+  .nav-links{display:flex;gap:4px;}
+  .nav-link{padding:6px 14px;font-size:12px;letter-spacing:1px;text-decoration:none;
+    color:var(--dim);border:1px solid transparent;transition:.2s;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;}
+  .nav-link:hover,.nav-link.ativo{color:var(--blue);border-color:var(--border);}
+  .topbar-right{display:flex;align-items:center;gap:16px;}
+  .user-info{font-size:12px;color:var(--dim);font-family:'Share Tech Mono',monospace;}
+  .clock{font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--blue);}
+  .btn-sair{background:none;border:1px solid var(--border);color:var(--dim);
+    padding:5px 12px;font-size:11px;cursor:pointer;letter-spacing:1px;}
+  .btn-sair:hover{border-color:var(--red);color:var(--red);}
+
+  /* Layout */
+  .main{padding:20px 24px;display:grid;
+    grid-template-columns:repeat(4,1fr);gap:16px;}
+
+  /* KPI Cards */
+  .kpi-card{background:var(--panel);border:1px solid var(--border);
+    padding:20px;position:relative;overflow:hidden;}
+  .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+  .kpi-card.verde::before{background:var(--green);}
+  .kpi-card.vermelho::before{background:var(--red);}
+  .kpi-card.azul::before{background:var(--blue);}
+  .kpi-card.amarelo::before{background:var(--yellow);}
+  .kpi-card.laranja::before{background:var(--orange);}
+  .kpi-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--dim);font-family:'Share Tech Mono',monospace;margin-bottom:8px;}
+  .kpi-val{font-size:40px;font-weight:700;line-height:1;}
+  .kpi-sub{font-size:12px;color:var(--dim);margin-top:6px;}
+  .kpi-card.verde .kpi-val{color:var(--green);}
+  .kpi-card.vermelho .kpi-val{color:var(--red);}
+  .kpi-card.azul .kpi-val{color:var(--blue);}
+  .kpi-card.amarelo .kpi-val{color:var(--yellow);}
+  .kpi-card.laranja .kpi-val{color:var(--orange);}
+
+  /* Row 2: panels */
+  .row2{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+  .panel-box{background:var(--panel);border:1px solid var(--border);padding:0;}
+  .panel-header{display:flex;align-items:center;justify-content:space-between;
+    padding:12px 16px;border-bottom:1px solid var(--border);
+    font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--blue);}
+  .panel-body{padding:16px;max-height:300px;overflow-y:auto;}
+  .panel-body::-webkit-scrollbar{width:4px;}
+  .panel-body::-webkit-scrollbar-track{background:transparent;}
+  .panel-body::-webkit-scrollbar-thumb{background:var(--border);}
+
+  /* Chamados */
+  .chamado-item{display:flex;align-items:flex-start;gap:12px;
+    padding:10px 0;border-bottom:1px solid rgba(26,58,92,.5);}
+  .chamado-item:last-child{border-bottom:none;}
+  .ch-num{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--dim);
+    min-width:110px;}
+  .ch-info{flex:1;}
+  .ch-cliente{font-size:13px;font-weight:600;}
+  .ch-desc{font-size:12px;color:var(--dim);margin-top:2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;}
+  .badge{display:inline-block;padding:2px 8px;font-size:10px;letter-spacing:1px;
+    font-family:'Share Tech Mono',monospace;border-radius:2px;}
+  .badge-aberto{background:rgba(0,170,255,.15);color:var(--blue);border:1px solid rgba(0,170,255,.3);}
+  .badge-atendimento{background:rgba(255,204,0,.15);color:var(--yellow);border:1px solid rgba(255,204,0,.3);}
+  .badge-resolvido{background:rgba(0,255,136,.15);color:var(--green);border:1px solid rgba(0,255,136,.3);}
+  .badge-critico{background:rgba(255,51,102,.2);color:var(--red);border:1px solid rgba(255,51,102,.3);}
+  .badge-alto{background:rgba(255,136,0,.15);color:var(--orange);border:1px solid rgba(255,136,0,.3);}
+  .badge-normal{background:rgba(74,122,155,.15);color:var(--dim);border:1px solid rgba(74,122,155,.3);}
+
+  /* Sensores DOWN */
+  .sensor-item{display:flex;align-items:center;gap:10px;padding:8px 0;
+    border-bottom:1px solid rgba(26,58,92,.5);}
+  .sensor-item:last-child{border-bottom:none;}
+  .sensor-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .dot-down{background:var(--red);box-shadow:0 0 8px var(--red);animation:blink 1.5s infinite;}
+  .dot-aviso{background:var(--yellow);box-shadow:0 0 8px var(--yellow);}
+  .dot-ok{background:var(--green);}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+  .sensor-nome{flex:1;font-size:13px;}
+  .sensor-device{font-size:11px;color:var(--dim);}
+  .sensor-tempo{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--red);}
+
+  /* Alertas */
+  .alerta-item{padding:8px 0;border-bottom:1px solid rgba(26,58,92,.5);font-size:12px;}
+  .alerta-item:last-child{border-bottom:none;}
+  .alerta-sensor{font-weight:600;margin-bottom:2px;}
+  .alerta-info{color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:11px;}
+  .alerta-up{border-left:3px solid var(--green);padding-left:8px;}
+  .alerta-down{border-left:3px solid var(--red);padding-left:8px;}
+  .alerta-aviso{border-left:3px solid var(--yellow);padding-left:8px;}
+
+  /* Row 3: OLTs */
+  .row3{grid-column:1/-1;}
+  .olts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;
+    padding:16px;}
+  .olt-card{background:var(--panel2);border:1px solid var(--border);padding:14px;
+    position:relative;transition:.2s;}
+  .olt-card:hover{border-color:var(--blue);}
+  .olt-card.down{border-color:var(--red);background:rgba(255,51,102,.05);}
+  .olt-card.down::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:var(--red);}
+  .olt-card.aviso{border-color:var(--yellow);}
+  .olt-nome{font-size:13px;font-weight:600;margin-bottom:4px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .olt-device{font-size:11px;color:var(--dim);margin-bottom:8px;}
+  .olt-status{display:flex;align-items:center;gap:6px;font-size:12px;}
+
+  .empty-state{text-align:center;padding:32px;color:var(--dim);
+    font-family:'Share Tech Mono',monospace;font-size:13px;}
+
+  .btn-novo{background:none;border:1px solid var(--blue);color:var(--blue);
+    padding:4px 12px;font-size:11px;cursor:pointer;letter-spacing:1px;
+    font-family:'Share Tech Mono',monospace;}
+  .btn-novo:hover{background:rgba(0,170,255,.1);}
+
+  /* Modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);
+    z-index:200;align-items:center;justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:var(--panel);border:1px solid var(--border);
+    border-top:2px solid var(--blue);width:520px;max-width:95vw;}
+  .modal-header{padding:16px 20px;border-bottom:1px solid var(--border);
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:'Share Tech Mono',monospace;font-size:13px;letter-spacing:2px;color:var(--blue);}
+  .modal-body{padding:20px;}
+  .modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+  .btn-fechar{background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer;}
+  .form-row{margin-bottom:16px;}
+  .form-row label{display:block;font-size:11px;letter-spacing:2px;color:var(--dim);
+    margin-bottom:6px;font-family:'Share Tech Mono',monospace;text-transform:uppercase;}
+  .form-row input,.form-row select,.form-row textarea{
+    width:100%;background:rgba(0,170,255,.05);border:1px solid var(--border);
+    color:var(--text);padding:10px 12px;font-size:13px;font-family:'Exo 2',sans-serif;outline:none;}
+  .form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--blue);}
+  .form-row select option{background:var(--panel);}
+  .form-row textarea{resize:vertical;min-height:80px;}
+  .btn-salvar{background:var(--blue);border:none;color:var(--bg);
+    padding:10px 20px;font-family:'Share Tech Mono',monospace;font-size:12px;
+    letter-spacing:2px;cursor:pointer;}
+  .btn-cancel{background:none;border:1px solid var(--border);color:var(--dim);
+    padding:10px 16px;font-family:'Share Tech Mono',monospace;font-size:12px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">📡 HubNOC</div>
+    <div class="nav-links">
+      <a class="nav-link ativo" href="/dashboard">Dashboard</a>
+      <a class="nav-link" href="/chamados">Chamados</a>
+      <a class="nav-link" href="/sensores">Sensores</a>
+      <a class="nav-link" href="/incidentes">Incidentes</a>
+      <a class="nav-link" href="/cliente">Clientes</a>
+      <a class="nav-link" href="/tv" target="_blank">📺 TV</a>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="user-info" id="user-nome">—</div>
+    <div class="clock" id="clock">00:00:00</div>
+    <button class="btn-sair" onclick="sair()">SAIR</button>
+  </div>
+</div>
+
+<div class="main" id="main-grid">
+  <!-- KPIs -->
+  <div class="kpi-card verde">
+    <div class="kpi-label">Sensores OK</div>
+    <div class="kpi-val" id="kpi-ok">—</div>
+    <div class="kpi-sub" id="kpi-total">de — sensores</div>
+  </div>
+  <div class="kpi-card vermelho">
+    <div class="kpi-label">🔴 DOWN</div>
+    <div class="kpi-val" id="kpi-down">—</div>
+    <div class="kpi-sub" id="kpi-aviso-sub">— em aviso</div>
+  </div>
+  <div class="kpi-card azul">
+    <div class="kpi-label">Chamados Abertos</div>
+    <div class="kpi-val" id="kpi-chamados">—</div>
+    <div class="kpi-sub" id="kpi-atend">— em atendimento</div>
+  </div>
+  <div class="kpi-card amarelo">
+    <div class="kpi-label">Incidentes Ativos</div>
+    <div class="kpi-val" id="kpi-incidentes">—</div>
+    <div class="kpi-sub">abertos agora</div>
+  </div>
+
+  <!-- Row 2: Chamados + Sensores DOWN -->
+  <div class="row2">
+    <div class="panel-box">
+      <div class="panel-header">
+        <span>CHAMADOS RECENTES</span>
+        <button class="btn-novo" onclick="abrirModalChamado()">+ NOVO</button>
+      </div>
+      <div class="panel-body" id="lista-chamados">
+        <div class="empty-state">Carregando...</div>
+      </div>
+    </div>
+    <div class="panel-box">
+      <div class="panel-header">
+        <span>ALERTAS & SENSORES DOWN</span>
+        <span id="last-sync" style="font-size:10px;color:var(--dim)">—</span>
+      </div>
+      <div class="panel-body" id="lista-sensores-down">
+        <div class="empty-state">Carregando...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3: OLTs -->
+  <div class="row3">
+    <div class="panel-box">
+      <div class="panel-header">
+        <span>MONITOR OLTs</span>
+        <span id="olts-count" style="font-size:10px;color:var(--dim)">—</span>
+      </div>
+      <div class="olts-grid" id="olts-grid">
+        <div class="empty-state">Carregando OLTs...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Novo Chamado -->
+<div class="modal-overlay" id="modal-chamado">
+  <div class="modal">
+    <div class="modal-header">
+      NOVO CHAMADO
+      <button class="btn-fechar" onclick="fecharModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Canal</label>
+        <select id="f-canal">
+          <option value="whatsapp">WhatsApp</option>
+          <option value="telefone">Telefone</option>
+          <option value="sistema">Sistema</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Buscar Cliente (nome, CPF ou login)</label>
+        <input type="text" id="f-busca-cliente" placeholder="Digite para buscar..." oninput="buscarCliente()">
+        <div id="resultado-busca" style="margin-top:6px;"></div>
+      </div>
+      <div class="form-row">
+        <label>Descrição</label>
+        <textarea id="f-descricao" placeholder="Descreva o problema..."></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-row">
+          <label>Categoria</label>
+          <select id="f-categoria">
+            <option value="sem_internet">Sem Internet</option>
+            <option value="lentidao">Lentidão</option>
+            <option value="intermitencia">Intermitência</option>
+            <option value="configuracao">Configuração</option>
+            <option value="outros">Outros</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Prioridade</label>
+          <select id="f-prioridade">
+            <option value="baixa">Baixa</option>
+            <option value="normal" selected>Normal</option>
+            <option value="alta">Alta</option>
+            <option value="critica">Crítica</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-salvar" onclick="salvarChamado()">ABRIR CHAMADO</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var API = '';
+var clienteSelecionado = null;
+var refreshInterval = null;
+
+// Auth check
+var token = localStorage.getItem('noc_token');
+if(!token){ window.location.href = '/login'; }
+document.getElementById('user-nome').textContent = localStorage.getItem('noc_nome') || '—';
+
+// Clock
+function updateClock(){
+  var now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('pt-BR');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+function sair(){
+  localStorage.clear();
+  window.location.href = '/login';
+}
+
+function headers(){
+  return {'Content-Type':'application/json','Authorization':'Bearer '+token};
+}
+
+function carregarDados(){
+  // KPIs
+  fetch(API+'/api/dashboard/resumo', {headers:headers()})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var s = d.sensores || {};
+    document.getElementById('kpi-ok').textContent   = s.ok || 0;
+    document.getElementById('kpi-down').textContent = s.down || 0;
+    document.getElementById('kpi-total').textContent = 'de '+(s.total||0)+' sensores';
+    document.getElementById('kpi-aviso-sub').textContent = (s.aviso||0)+' em aviso';
+
+    var ch = d.chamados || {};
+    document.getElementById('kpi-chamados').textContent = ch.abertos || 0;
+    document.getElementById('kpi-atend').textContent = (ch.em_atendimento||0)+' em atendimento';
+    document.getElementById('kpi-incidentes').textContent = d.incidentes_ativos || 0;
+
+    // Sensores DOWN
+    var downList = d.sensores_down || [];
+    var alertas = d.alertas_recentes || [];
+    renderSensoresDown(downList, alertas);
+    document.getElementById('last-sync').textContent = 'sync '+new Date().toLocaleTimeString('pt-BR');
+  })
+  .catch(function(){});
+
+  // Chamados
+  fetch(API+'/api/chamados?status=aberto', {headers:headers()})
+  .then(function(r){return r.json();})
+  .then(function(d){ renderChamados(d); })
+  .catch(function(){});
+
+  // OLTs
+  fetch(API+'/api/sensores/olts', {headers:headers()})
+  .then(function(r){return r.json();})
+  .then(function(d){ renderOLTs(d); })
+  .catch(function(){});
+}
+
+function renderChamados(lista){
+  var el = document.getElementById('lista-chamados');
+  if(!lista || !lista.length){
+    el.innerHTML = '<div class="empty-state">✓ Nenhum chamado aberto</div>';
+    return;
+  }
+  var html = '';
+  lista.slice(0,15).forEach(function(c){
+    var badge = c.status === 'em_atendimento'
+      ? '<span class="badge badge-atendimento">ATENDENDO</span>'
+      : '<span class="badge badge-aberto">ABERTO</span>';
+    var prio = c.prioridade === 'critica' ? '<span class="badge badge-critico">CRÍTICO</span>'
+      : c.prioridade === 'alta' ? '<span class="badge badge-alto">ALTO</span>' : '';
+    html += '<div class="chamado-item">' +
+      '<div class="ch-num">'+(c.numero||'—')+'</div>' +
+      '<div class="ch-info">' +
+        '<div class="ch-cliente">'+(c.cliente_nome||'Cliente não identificado')+
+          ' '+badge+' '+prio+'</div>' +
+        '<div class="ch-desc">'+(c.descricao||'')+'</div>' +
+      '</div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderSensoresDown(downList, alertas){
+  var el = document.getElementById('lista-sensores-down');
+  var html = '';
+
+  if(downList && downList.length){
+    downList.forEach(function(s){
+      html += '<div class="sensor-item">' +
+        '<span class="sensor-dot dot-down"></span>' +
+        '<div class="flex-1">' +
+          '<div class="sensor-nome">'+s.nome+'</div>' +
+          '<div class="sensor-device">'+s.device+'</div>' +
+        '</div>' +
+        '<div class="sensor-tempo">'+(s.down_desde ? tempoDecorrido(s.down_desde) : '—')+'</div>' +
+      '</div>';
+    });
+  }
+
+  if(alertas && alertas.length){
+    alertas.slice(0,8).forEach(function(a){
+      var cls = a.status_novo === 'DOWN' ? 'alerta-down'
+        : a.status_novo === 'OK' ? 'alerta-up' : 'alerta-aviso';
+      var seta = a.status_novo === 'DOWN' ? '🔴' : a.status_novo === 'OK' ? '🟢' : '🟡';
+      html += '<div class="alerta-item '+cls+'">' +
+        '<div class="alerta-sensor">'+seta+' '+a.sensor_nome+'</div>' +
+        '<div class="alerta-info">'+a.device+' · '+(a.status_anterior||'?')+' → '+a.status_novo+' · '+
+          (a.ocorreu_em||'').substring(11,16)+'</div>' +
+      '</div>';
+    });
+  }
+
+  if(!html) html = '<div class="empty-state">✓ Todos os sensores OK</div>';
+  el.innerHTML = html;
+}
+
+function renderOLTs(lista){
+  var el = document.getElementById('olts-grid');
+  document.getElementById('olts-count').textContent = (lista||[]).length + ' OLTs';
+  if(!lista || !lista.length){
+    el.innerHTML = '<div class="empty-state">Nenhuma OLT encontrada no PRTG</div>';
+    return;
+  }
+  var html = '';
+  lista.forEach(function(o){
+    var cls = o.status === 'DOWN' ? 'down' : o.status === 'Aviso' ? 'aviso' : '';
+    var dotCls = o.status === 'DOWN' ? 'dot-down' : o.status === 'Aviso' ? 'dot-aviso' : 'dot-ok';
+    html += '<div class="olt-card '+cls+'">' +
+      '<div class="olt-nome" title="'+o.nome+'">'+o.nome+'</div>' +
+      '<div class="olt-device">'+o.device+'</div>' +
+      '<div class="olt-status"><span class="sensor-dot '+dotCls+'"></span>'+o.status+'</div>' +
+    '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function tempoDecorrido(dtStr){
+  if(!dtStr) return '—';
+  var d = new Date(dtStr.replace(' ','T'));
+  var diff = Math.floor((Date.now() - d.getTime()) / 60000);
+  if(diff < 60) return diff+'min';
+  return Math.floor(diff/60)+'h'+(diff%60)+'m';
+}
+
+// Modal chamado
+function abrirModalChamado(){
+  document.getElementById('modal-chamado').classList.add('show');
+  clienteSelecionado = null;
+}
+function fecharModal(){
+  document.getElementById('modal-chamado').classList.remove('show');
+  document.getElementById('f-busca-cliente').value = '';
+  document.getElementById('f-descricao').value = '';
+  document.getElementById('resultado-busca').innerHTML = '';
+  clienteSelecionado = null;
+}
+
+var buscaTimer = null;
+function buscarCliente(){
+  var q = document.getElementById('f-busca-cliente').value.trim();
+  clearTimeout(buscaTimer);
+  if(q.length < 2){ document.getElementById('resultado-busca').innerHTML=''; return; }
+  buscaTimer = setTimeout(function(){
+    fetch(API+'/api/clientes/buscar?q='+encodeURIComponent(q), {headers:headers()})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var el = document.getElementById('resultado-busca');
+      if(!d || !d.length){ el.innerHTML='<div style="font-size:12px;color:var(--dim);padding:4px">Nenhum cliente encontrado</div>'; return; }
+      var html = '<div style="background:var(--panel2);border:1px solid var(--border);max-height:160px;overflow-y:auto;">';
+      d.forEach(function(c){
+        html += '<div onclick="selecionarCliente('+c.id+',\''+escHtml(c.razao)+'\',\''+escHtml(c.login_pppoe||'')+'\')'+
+          '" style="padding:8px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);" '+
+          'onmouseover="this.style.background=\'var(--border)\'" onmouseout="this.style.background=\'\'">' +
+          '<strong>'+escHtml(c.razao)+'</strong>' +
+          '<span style="color:var(--dim);font-size:11px;margin-left:8px;">'+escHtml(c.login_pppoe||'—')+'</span></div>';
+      });
+      html += '</div>';
+      el.innerHTML = html;
+    }).catch(function(){});
+  }, 300);
+}
+
+function selecionarCliente(id, nome, login){
+  clienteSelecionado = {id:id, nome:nome, login:login};
+  document.getElementById('f-busca-cliente').value = nome + (login ? ' ('+login+')' : '');
+  document.getElementById('resultado-busca').innerHTML = '';
+}
+
+function salvarChamado(){
+  var desc = document.getElementById('f-descricao').value.trim();
+  if(!desc){ alert('Informe a descrição do problema'); return; }
+  var body = {
+    canal: document.getElementById('f-canal').value,
+    descricao: desc,
+    categoria: document.getElementById('f-categoria').value,
+    prioridade: document.getElementById('f-prioridade').value
+  };
+  if(clienteSelecionado){
+    body.cliente_id = clienteSelecionado.id;
+    body.cliente_nome = clienteSelecionado.nome;
+    body.cliente_login = clienteSelecionado.login;
+  }
+  fetch(API+'/api/chamados', {
+    method:'POST', headers:headers(), body:JSON.stringify(body)
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    fecharModal();
+    carregarDados();
+  }).catch(function(){ alert('Erro ao abrir chamado'); });
+}
+
+function escHtml(s){ return (s||'').replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+// Init
+carregarDados();
+refreshInterval = setInterval(carregarDados, 30000);
+</script>
+</body>
+</html>

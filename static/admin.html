@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HubNOC — Chamados</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#070d14;--panel:#0d1a26;--border:#1a3a5c;--green:#00ff88;--blue:#00aaff;--red:#ff3366;--yellow:#ffcc00;--orange:#ff8800;--text:#c8dde8;--dim:#4a7a9b;}
+  body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;min-height:100vh;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--blue);letter-spacing:3px;}
+  .nav-links{display:flex;gap:4px;}
+  .nav-link{padding:6px 14px;font-size:12px;letter-spacing:1px;text-decoration:none;color:var(--dim);border:1px solid transparent;transition:.2s;cursor:pointer;font-family:'Share Tech Mono',monospace;}
+  .nav-link:hover,.nav-link.ativo{color:var(--blue);border-color:var(--border);}
+  .topbar-right{display:flex;align-items:center;gap:16px;}
+  .user-info{font-size:12px;color:var(--dim);font-family:'Share Tech Mono',monospace;}
+  .btn-sair{background:none;border:1px solid var(--border);color:var(--dim);padding:5px 12px;font-size:11px;cursor:pointer;}
+  .btn-sair:hover{border-color:var(--red);color:var(--red);}
+  .main{padding:20px 24px;}
+  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+  .page-title{font-family:'Share Tech Mono',monospace;font-size:16px;letter-spacing:3px;color:var(--blue);}
+  .btn-novo{background:none;border:1px solid var(--blue);color:var(--blue);padding:8px 16px;font-size:12px;cursor:pointer;letter-spacing:2px;font-family:'Share Tech Mono',monospace;}
+  .btn-novo:hover{background:rgba(0,170,255,.1);}
+  .filtros{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .filtro-btn{padding:6px 14px;font-size:12px;font-family:'Share Tech Mono',monospace;border:1px solid var(--border);background:none;color:var(--dim);cursor:pointer;transition:.2s;}
+  .filtro-btn.ativo{border-color:var(--blue);color:var(--blue);}
+  .tabela{width:100%;border-collapse:collapse;}
+  .tabela th{background:var(--panel);border-bottom:2px solid var(--border);padding:10px 14px;text-align:left;font-size:11px;letter-spacing:2px;color:var(--dim);font-family:'Share Tech Mono',monospace;text-transform:uppercase;}
+  .tabela td{padding:12px 14px;border-bottom:1px solid rgba(26,58,92,.4);font-size:13px;vertical-align:middle;}
+  .tabela tr:hover td{background:rgba(0,170,255,.03);}
+  .badge{display:inline-block;padding:2px 8px;font-size:10px;letter-spacing:1px;font-family:'Share Tech Mono',monospace;border-radius:2px;}
+  .badge-aberto{background:rgba(0,170,255,.15);color:var(--blue);border:1px solid rgba(0,170,255,.3);}
+  .badge-atendimento{background:rgba(255,204,0,.15);color:var(--yellow);border:1px solid rgba(255,204,0,.3);}
+  .badge-resolvido{background:rgba(0,255,136,.15);color:var(--green);border:1px solid rgba(0,255,136,.3);}
+  .badge-fechado{background:rgba(74,122,155,.15);color:var(--dim);border:1px solid rgba(74,122,155,.3);}
+  .badge-critico{background:rgba(255,51,102,.2);color:var(--red);border:1px solid rgba(255,51,102,.3);}
+  .badge-alto{background:rgba(255,136,0,.15);color:var(--orange);border:1px solid rgba(255,136,0,.3);}
+  .badge-normal{background:rgba(74,122,155,.15);color:var(--dim);border:1px solid rgba(74,122,155,.3);}
+  .btn-acao{background:none;border:1px solid var(--border);color:var(--dim);padding:4px 10px;font-size:11px;cursor:pointer;margin-right:4px;}
+  .btn-acao:hover{border-color:var(--blue);color:var(--blue);}
+  .empty{text-align:center;padding:40px;color:var(--dim);font-family:'Share Tech Mono',monospace;}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:var(--panel);border:1px solid var(--border);border-top:2px solid var(--blue);width:560px;max-width:95vw;}
+  .modal-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-family:'Share Tech Mono',monospace;font-size:13px;letter-spacing:2px;color:var(--blue);}
+  .modal-body{padding:20px;}
+  .modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+  .btn-fechar{background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer;}
+  .form-row{margin-bottom:14px;}
+  .form-row label{display:block;font-size:11px;letter-spacing:2px;color:var(--dim);margin-bottom:6px;font-family:'Share Tech Mono',monospace;text-transform:uppercase;}
+  .form-row input,.form-row select,.form-row textarea{width:100%;background:rgba(0,170,255,.05);border:1px solid var(--border);color:var(--text);padding:10px 12px;font-size:13px;font-family:'Exo 2',sans-serif;outline:none;}
+  .form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--blue);}
+  .form-row select option{background:var(--panel);}
+  .form-row textarea{resize:vertical;min-height:70px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .btn-salvar{background:var(--blue);border:none;color:var(--bg);padding:10px 20px;font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:2px;cursor:pointer;}
+  .btn-cancel{background:none;border:1px solid var(--border);color:var(--dim);padding:10px 16px;font-family:'Share Tech Mono',monospace;font-size:12px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="logo">📡 HubNOC</div>
+    <div class="nav-links">
+      <a class="nav-link" href="/dashboard">Dashboard</a>
+      <a class="nav-link ativo" href="/chamados">Chamados</a>
+      <a class="nav-link" href="/sensores">Sensores</a>
+      <a class="nav-link" href="/incidentes">Incidentes</a>
+      <a class="nav-link" href="/cliente">Clientes</a>
+      <a class="nav-link" href="/tv" target="_blank">📺 TV</a>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="user-info" id="user-nome">—</div>
+    <button class="btn-sair" onclick="sair()">SAIR</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <div class="page-title">FILA DE CHAMADOS</div>
+    <button class="btn-novo" onclick="abrirModal()">+ NOVO CHAMADO</button>
+  </div>
+
+  <div class="filtros">
+    <button class="filtro-btn ativo" onclick="filtrar('', this)">TODOS</button>
+    <button class="filtro-btn" onclick="filtrar('aberto', this)">ABERTOS</button>
+    <button class="filtro-btn" onclick="filtrar('em_atendimento', this)">EM ATENDIMENTO</button>
+    <button class="filtro-btn" onclick="filtrar('resolvido', this)">RESOLVIDOS</button>
+    <button class="filtro-btn" onclick="filtrar('fechado', this)">FECHADOS</button>
+  </div>
+
+  <table class="tabela">
+    <thead>
+      <tr>
+        <th>Número</th><th>Cliente</th><th>Descrição</th>
+        <th>Categoria</th><th>Prioridade</th><th>Status</th>
+        <th>Atendente</th><th>Abertura</th><th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="tabela-body">
+      <tr><td colspan="9" class="empty">Carregando...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal Chamado -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">NOVO CHAMADO <button class="btn-fechar" onclick="fecharModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Canal</label>
+        <select id="f-canal"><option value="whatsapp">WhatsApp</option><option value="telefone">Telefone</option><option value="sistema">Sistema</option></select>
+      </div>
+      <div class="form-row">
+        <label>Buscar Cliente</label>
+        <input type="text" id="f-busca" placeholder="Nome, CPF ou login PPPoE..." oninput="buscarCliente()">
+        <div id="resultado-busca" style="margin-top:6px;"></div>
+      </div>
+      <div class="form-row">
+        <label>Descrição</label>
+        <textarea id="f-desc" placeholder="Descreva o problema..."></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label>Categoria</label>
+          <select id="f-cat">
+            <option value="sem_internet">Sem Internet</option>
+            <option value="lentidao">Lentidão</option>
+            <option value="intermitencia">Intermitência</option>
+            <option value="configuracao">Configuração</option>
+            <option value="outros">Outros</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Prioridade</label>
+          <select id="f-prio">
+            <option value="baixa">Baixa</option>
+            <option value="normal" selected>Normal</option>
+            <option value="alta">Alta</option>
+            <option value="critica">Crítica</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-salvar" onclick="salvar()">ABRIR CHAMADO</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var API = '';
+var token = localStorage.getItem('noc_token');
+if(!token){ window.location.href = '/login'; }
+document.getElementById('user-nome').textContent = localStorage.getItem('noc_nome') || '—';
+var clienteSel = null;
+var filtroAtual = '';
+
+function sair(){ localStorage.clear(); window.location.href = '/login'; }
+function headers(){ return {'Content-Type':'application/json','Authorization':'Bearer '+token}; }
+
+function filtrar(status, btn){
+  filtroAtual = status;
+  document.querySelectorAll('.filtro-btn').forEach(function(b){ b.classList.remove('ativo'); });
+  btn.classList.add('ativo');
+  carregar();
+}
+
+function carregar(){
+  var url = API+'/api/chamados'+(filtroAtual ? '?status='+filtroAtual : '');
+  fetch(url, {headers:headers()})
+  .then(function(r){return r.json();})
+  .then(renderTabela)
+  .catch(function(){});
+}
+
+var badgeSt = {
+  aberto:'badge-aberto',em_atendimento:'badge-atendimento',
+  resolvido:'badge-resolvido',fechado:'badge-fechado'
+};
+var badgePr = {critica:'badge-critico',alta:'badge-alto',normal:'badge-normal',baixa:'badge-normal'};
+
+function renderTabela(lista){
+  var tb = document.getElementById('tabela-body');
+  if(!lista || !lista.length){
+    tb.innerHTML = '<tr><td colspan="9" class="empty">Nenhum chamado encontrado</td></tr>';
+    return;
+  }
+  var html = '';
+  lista.forEach(function(c){
+    html += '<tr>' +
+      '<td><span style="font-family:\'Share Tech Mono\',monospace;font-size:12px;">'+c.numero+'</span></td>' +
+      '<td>'+esc(c.cliente_nome||'—')+'<br><span style="font-size:11px;color:var(--dim)">'+esc(c.cliente_login||'')+'</span></td>' +
+      '<td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+esc(c.descricao)+'">'+esc(c.descricao)+'</td>' +
+      '<td>'+esc(c.categoria||'—')+'</td>' +
+      '<td><span class="badge '+(badgePr[c.prioridade]||'badge-normal')+'">'+esc(c.prioridade)+'</span></td>' +
+      '<td><span class="badge '+(badgeSt[c.status]||'badge-aberto')+'">'+esc(c.status)+'</span></td>' +
+      '<td>'+esc(c.atendente_nome||'—')+'</td>' +
+      '<td style="font-size:11px;font-family:\'Share Tech Mono\',monospace;color:var(--dim)">'+(c.aberto_em||'').substring(0,16)+'</td>' +
+      '<td><button class="btn-acao" onclick="atribuir('+c.id+')">Atribuir</button>' +
+           '<button class="btn-acao" onclick="resolver('+c.id+')">Resolver</button></td>' +
+    '</tr>';
+  });
+  tb.innerHTML = html;
+}
+
+function atribuir(id){
+  var atrib = prompt('ID do atendente para atribuir:');
+  if(!atrib) return;
+  fetch(API+'/api/chamados/'+id, {
+    method:'PUT', headers:headers(),
+    body:JSON.stringify({atribuido_a:parseInt(atrib), status:'em_atendimento'})
+  }).then(function(){carregar();}).catch(function(){});
+}
+
+function resolver(id){
+  var sol = prompt('Solução aplicada:');
+  if(!sol) return;
+  fetch(API+'/api/chamados/'+id, {
+    method:'PUT', headers:headers(),
+    body:JSON.stringify({status:'resolvido', solucao:sol})
+  }).then(function(){carregar();}).catch(function(){});
+}
+
+function abrirModal(){ document.getElementById('modal').classList.add('show'); clienteSel=null; }
+function fecharModal(){
+  document.getElementById('modal').classList.remove('show');
+  document.getElementById('f-busca').value='';
+  document.getElementById('f-desc').value='';
+  document.getElementById('resultado-busca').innerHTML='';
+  clienteSel=null;
+}
+
+var bTimer=null;
+function buscarCliente(){
+  var q=document.getElementById('f-busca').value.trim();
+  clearTimeout(bTimer);
+  if(q.length<2){document.getElementById('resultado-busca').innerHTML='';return;}
+  bTimer=setTimeout(function(){
+    fetch(API+'/api/clientes/buscar?q='+encodeURIComponent(q),{headers:headers()})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var el=document.getElementById('resultado-busca');
+      if(!d||!d.length){el.innerHTML='<div style="font-size:12px;color:var(--dim);padding:4px">Nenhum cliente</div>';return;}
+      var html='<div style="background:var(--panel);border:1px solid var(--border);max-height:140px;overflow-y:auto;">';
+      d.forEach(function(c){
+        html+='<div onclick="selCliente('+c.id+',\''+esc(c.razao)+'\',\''+esc(c.login_pppoe||'')+'\')'+
+          '" style="padding:8px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);">' +
+          '<strong>'+esc(c.razao)+'</strong>' +
+          '<span style="color:var(--dim);margin-left:8px;font-size:11px;">'+esc(c.login_pppoe||'')+'</span></div>';
+      });
+      html+='</div>';
+      el.innerHTML=html;
+    }).catch(function(){});
+  },300);
+}
+
+function selCliente(id,nome,login){
+  clienteSel={id:id,nome:nome,login:login};
+  document.getElementById('f-busca').value=nome+(login?' ('+login+')':'');
+  document.getElementById('resultado-busca').innerHTML='';
+}
+
+function salvar(){
+  var desc=document.getElementById('f-desc').value.trim();
+  if(!desc){alert('Informe a descrição');return;}
+  var body={
+    canal:document.getElementById('f-canal').value,
+    descricao:desc,
+    categoria:document.getElementById('f-cat').value,
+    prioridade:document.getElementById('f-prio').value
+  };
+  if(clienteSel){body.cliente_id=clienteSel.id;body.cliente_nome=clienteSel.nome;body.cliente_login=clienteSel.login;}
+  fetch(API+'/api/chamados',{method:'POST',headers:headers(),body:JSON.stringify(body)})
+  .then(function(r){return r.json();})
+  .then(function(){fecharModal();carregar();})
+  .catch(function(){alert('Erro ao salvar');});
+}
+
+function esc(s){return (s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+carregar();
+setInterval(carregar,30000);
+</script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HubNOC TV — Cliquedf</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;700;900&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#04080f;--panel:#090f1a;--border:#142033;
+    --green:#00ff88;--blue:#00aaff;--red:#ff2255;
+    --yellow:#ffcc00;--orange:#ff8800;--text:#b8ccd8;--dim:#2a5070;
+  }
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
+  body{font-family:'Exo 2',sans-serif;color:var(--text);
+    display:grid;grid-template-rows:auto 1fr auto;gap:0;}
+
+  /* Background animado */
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 50%, rgba(0,170,255,.03) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 80% 30%, rgba(0,255,136,.02) 0%, transparent 60%);
+    z-index:0;}
+
+  /* Header */
+  .tv-header{position:relative;z-index:10;
+    display:grid;grid-template-columns:auto 1fr auto;align-items:center;
+    padding:10px 24px;background:var(--panel);
+    border-bottom:1px solid var(--border);}
+  .tv-logo{display:flex;align-items:center;gap:12px;}
+  .tv-logo-icon{font-size:28px;filter:drop-shadow(0 0 8px var(--blue));}
+  .tv-logo-text{font-family:'Share Tech Mono',monospace;font-size:20px;
+    color:var(--blue);letter-spacing:4px;}
+  .tv-logo-sub{font-size:11px;color:var(--dim);letter-spacing:2px;margin-top:2px;}
+
+  /* KPI bar central */
+  .tv-kpis{display:flex;align-items:center;justify-content:center;gap:32px;}
+  .tv-kpi{text-align:center;}
+  .tv-kpi-val{font-size:36px;font-weight:900;line-height:1;font-family:'Share Tech Mono',monospace;}
+  .tv-kpi-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-top:2px;}
+  .kv-green{color:var(--green);text-shadow:0 0 20px rgba(0,255,136,.5);}
+  .kv-red{color:var(--red);text-shadow:0 0 20px rgba(255,34,85,.5);}
+  .kv-blue{color:var(--blue);text-shadow:0 0 20px rgba(0,170,255,.5);}
+  .kv-yellow{color:var(--yellow);}
+  .kpi-sep{width:1px;height:40px;background:var(--border);}
+
+  .tv-time{text-align:right;font-family:'Share Tech Mono',monospace;}
+  .tv-clock{font-size:28px;color:var(--blue);}
+  .tv-date{font-size:12px;color:var(--dim);margin-top:2px;}
+
+  /* Main grid */
+  .tv-main{position:relative;z-index:1;display:grid;
+    grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;
+    padding:8px;height:100%;}
+
+  .tv-panel{background:var(--panel);border:1px solid var(--border);
+    display:flex;flex-direction:column;overflow:hidden;}
+  .tv-panel-title{padding:8px 14px;border-bottom:1px solid var(--border);
+    font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:3px;
+    text-transform:uppercase;color:var(--blue);display:flex;justify-content:space-between;
+    align-items:center;flex-shrink:0;}
+  .tv-panel-body{flex:1;overflow:hidden;padding:10px;}
+
+  /* OLTs panel — span 2 rows */
+  .panel-olts{grid-row:1/3;grid-column:1;}
+  .olts-list{display:flex;flex-direction:column;gap:6px;height:100%;overflow-y:auto;}
+  .olt-row{display:flex;align-items:center;gap:10px;padding:10px 12px;
+    background:rgba(255,255,255,.02);border:1px solid var(--border);
+    transition:.3s;position:relative;overflow:hidden;}
+  .olt-row.down{border-color:var(--red);background:rgba(255,34,85,.06);}
+  .olt-row.down::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red);}
+  .olt-row.aviso{border-color:var(--yellow);background:rgba(255,204,0,.04);}
+  .olt-row.aviso::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--yellow);}
+  .olt-row.ok::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);}
+  .olt-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+  .olt-dot.ok{background:var(--green);box-shadow:0 0 8px var(--green);}
+  .olt-dot.down{background:var(--red);box-shadow:0 0 10px var(--red);animation:pulse 1s infinite;}
+  .olt-dot.aviso{background:var(--yellow);box-shadow:0 0 8px var(--yellow);}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+  .olt-info{flex:1;min-width:0;}
+  .olt-nome{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .olt-device{font-size:11px;color:var(--dim);}
+  .olt-status-text{font-size:12px;font-family:'Share Tech Mono',monospace;font-weight:700;}
+  .olt-status-text.ok{color:var(--green);}
+  .olt-status-text.down{color:var(--red);}
+  .olt-status-text.aviso{color:var(--yellow);}
+
+  /* Sensores DOWN */
+  .panel-down{grid-column:2;}
+  .down-list{display:flex;flex-direction:column;gap:6px;height:100%;overflow-y:auto;}
+  .down-row{padding:10px 12px;background:rgba(255,34,85,.06);
+    border:1px solid rgba(255,34,85,.2);border-left:3px solid var(--red);}
+  .down-nome{font-size:13px;font-weight:600;color:var(--red);}
+  .down-device{font-size:11px;color:var(--dim);margin-top:2px;}
+  .down-tempo{font-family:'Share Tech Mono',monospace;font-size:12px;
+    color:var(--red);margin-top:4px;}
+  .down-empty{text-align:center;padding:20px;color:var(--green);
+    font-family:'Share Tech Mono',monospace;font-size:14px;}
+
+  /* Incidentes */
+  .panel-incidentes{grid-column:3;}
+  .inc-row{padding:10px 12px;margin-bottom:6px;
+    border-left:3px solid var(--orange);background:rgba(255,136,0,.05);
+    border:1px solid rgba(255,136,0,.2);border-left:3px solid var(--orange);}
+  .inc-row.critico{border-left-color:var(--red);background:rgba(255,34,85,.06);}
+  .inc-titulo{font-size:13px;font-weight:700;}
+  .inc-meta{font-size:11px;color:var(--dim);margin-top:3px;font-family:'Share Tech Mono',monospace;}
+  .inc-empty{text-align:center;padding:20px;color:var(--green);
+    font-family:'Share Tech Mono',monospace;font-size:14px;}
+
+  /* Alertas recentes */
+  .panel-alertas{grid-column:2;}
+  .alerta-row{display:flex;align-items:center;gap:10px;padding:7px 0;
+    border-bottom:1px solid var(--border);}
+  .alerta-row:last-child{border-bottom:none;}
+  .alerta-icon{font-size:16px;flex-shrink:0;}
+  .alerta-info-tv{flex:1;min-width:0;}
+  .alerta-nome-tv{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .alerta-detalhe{font-size:10px;color:var(--dim);font-family:'Share Tech Mono',monospace;}
+  .alerta-hora{font-size:11px;color:var(--dim);font-family:'Share Tech Mono',monospace;flex-shrink:0;}
+
+  /* Chamados abertos */
+  .panel-chamados{grid-column:3;}
+  .ch-tv-val{font-size:64px;font-weight:900;color:var(--blue);
+    text-align:center;padding:20px;font-family:'Share Tech Mono',monospace;
+    text-shadow:0 0 30px rgba(0,170,255,.4);}
+  .ch-tv-label{text-align:center;font-size:13px;color:var(--dim);
+    font-family:'Share Tech Mono',monospace;letter-spacing:2px;}
+
+  /* Ticker bottom */
+  .tv-footer{position:relative;z-index:10;
+    background:var(--panel);border-top:1px solid var(--border);
+    padding:6px 16px;display:flex;align-items:center;gap:16px;
+    font-family:'Share Tech Mono',monospace;font-size:12px;}
+  .ticker-label{color:var(--blue);letter-spacing:2px;flex-shrink:0;}
+  .ticker-track{flex:1;overflow:hidden;}
+  .ticker-inner{display:flex;gap:40px;white-space:nowrap;
+    animation:tickerScroll 30s linear infinite;}
+  .ticker-inner:hover{animation-play-state:paused;}
+  @keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+  .ticker-item{color:var(--dim);}
+  .ticker-item.alerta-ticker{color:var(--red);}
+  .ticker-item.ok-ticker{color:var(--green);}
+  .tv-sync{flex-shrink:0;font-size:10px;color:var(--dim);}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="tv-header">
+  <div class="tv-logo">
+    <span class="tv-logo-icon">📡</span>
+    <div>
+      <div class="tv-logo-text">HubNOC</div>
+      <div class="tv-logo-sub">CLIQUEDF · NETWORK OPERATIONS CENTER</div>
+    </div>
+  </div>
+  <div class="tv-kpis">
+    <div class="tv-kpi">
+      <div class="tv-kpi-val kv-green" id="tv-ok">—</div>
+      <div class="tv-kpi-label">OK</div>
+    </div>
+    <div class="kpi-sep"></div>
+    <div class="tv-kpi">
+      <div class="tv-kpi-val kv-red" id="tv-down">—</div>
+      <div class="tv-kpi-label">DOWN</div>
+    </div>
+    <div class="kpi-sep"></div>
+    <div class="tv-kpi">
+      <div class="tv-kpi-val kv-yellow" id="tv-aviso">—</div>
+      <div class="tv-kpi-label">AVISO</div>
+    </div>
+    <div class="kpi-sep"></div>
+    <div class="tv-kpi">
+      <div class="tv-kpi-val kv-blue" id="tv-total">—</div>
+      <div class="tv-kpi-label">SENSORES</div>
+    </div>
+  </div>
+  <div class="tv-time">
+    <div class="tv-clock" id="tv-clock">00:00:00</div>
+    <div class="tv-date" id="tv-date">—</div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="tv-main">
+  <!-- OLTs (col 1, 2 rows) -->
+  <div class="tv-panel panel-olts">
+    <div class="tv-panel-title">
+      <span>📡 MONITOR OLTs</span>
+      <span id="olts-count-tv">—</span>
+    </div>
+    <div class="tv-panel-body">
+      <div class="olts-list" id="tv-olts">
+        <div style="color:var(--dim);text-align:center;padding:20px;font-family:'Share Tech Mono',monospace;">Carregando...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sensores DOWN (col 2, row 1) -->
+  <div class="tv-panel panel-down">
+    <div class="tv-panel-title"><span>🔴 SENSORES DOWN</span></div>
+    <div class="tv-panel-body">
+      <div class="down-list" id="tv-down-list">
+        <div class="down-empty">Carregando...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incidentes (col 3, row 1) -->
+  <div class="tv-panel panel-incidentes">
+    <div class="tv-panel-title"><span>⚡ INCIDENTES ATIVOS</span></div>
+    <div class="tv-panel-body" id="tv-incidentes">
+      <div class="inc-empty">Carregando...</div>
+    </div>
+  </div>
+
+  <!-- Alertas recentes (col 2, row 2) -->
+  <div class="tv-panel panel-alertas">
+    <div class="tv-panel-title"><span>🔔 ALERTAS RECENTES</span></div>
+    <div class="tv-panel-body">
+      <div id="tv-alertas">—</div>
+    </div>
+  </div>
+
+  <!-- Chamados abertos (col 3, row 2) -->
+  <div class="tv-panel panel-chamados">
+    <div class="tv-panel-title"><span>📞 CHAMADOS ABERTOS</span></div>
+    <div class="tv-panel-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <div class="ch-tv-val" id="tv-chamados">—</div>
+      <div class="ch-tv-label">AGUARDANDO ATENDIMENTO</div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer ticker -->
+<div class="tv-footer">
+  <span class="ticker-label">◄ ALERTAS</span>
+  <div class="ticker-track">
+    <div class="ticker-inner" id="ticker-inner">
+      <span class="ticker-item">Aguardando dados...</span>
+    </div>
+  </div>
+  <span class="tv-sync" id="tv-sync">—</span>
+</div>
+
+<script>
+var API = '';
+var REFRESH = 30000;
+
+function updateClock(){
+  var now = new Date();
+  document.getElementById('tv-clock').textContent = now.toLocaleTimeString('pt-BR');
+  document.getElementById('tv-date').textContent = now.toLocaleDateString('pt-BR',
+    {weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+function tempoDecorrido(dtStr){
+  if(!dtStr) return '—';
+  var d = new Date(dtStr.replace(' ','T'));
+  var diff = Math.floor((Date.now() - d.getTime()) / 60000);
+  if(diff < 60) return diff+'min';
+  return Math.floor(diff/60)+'h'+(diff%60)+'m';
+}
+
+function carregarTV(){
+  fetch(API+'/api/tv/estado')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var s = d.sensores || {};
+    document.getElementById('tv-ok').textContent    = s.ok || 0;
+    document.getElementById('tv-down').textContent  = s.down || 0;
+    document.getElementById('tv-aviso').textContent = s.aviso || 0;
+    document.getElementById('tv-total').textContent = s.total || 0;
+    document.getElementById('tv-chamados').textContent = d.chamados_abertos || 0;
+
+    // OLTs
+    var olts = d.olts || [];
+    document.getElementById('olts-count-tv').textContent = olts.length + ' OLTs';
+    var html = '';
+    // Ordena: DOWN primeiro
+    olts.sort(function(a,b){
+      var ord = {DOWN:0,Aviso:1,Incomum:2,OK:3,Pausado:4};
+      return (ord[a.status]||5) - (ord[b.status]||5);
+    });
+    olts.forEach(function(o){
+      var st = o.status === 'DOWN' ? 'down' : o.status === 'Aviso' ? 'aviso' : 'ok';
+      var tempo = o.status === 'DOWN' && o.down_desde ? ' · DOWN há '+tempoDecorrido(o.down_desde) : '';
+      html += '<div class="olt-row '+st+'">' +
+        '<span class="olt-dot '+st+'"></span>' +
+        '<div class="olt-info">' +
+          '<div class="olt-nome">'+o.nome+'</div>' +
+          '<div class="olt-device">'+o.device+'</div>' +
+        '</div>' +
+        '<div class="olt-status-text '+st+'">'+o.status+tempo+'</div>' +
+      '</div>';
+    });
+    document.getElementById('tv-olts').innerHTML = html || '<div style="color:var(--dim);text-align:center;padding:20px;font-family:\'Share Tech Mono\',monospace;">Nenhuma OLT no PRTG</div>';
+
+    // Sensores DOWN
+    var downList = d.down_list || [];
+    var downHtml = '';
+    if(downList.length){
+      downList.forEach(function(s){
+        downHtml += '<div class="down-row">' +
+          '<div class="down-nome">🔴 '+s.nome+'</div>' +
+          '<div class="down-device">'+s.device+(s.group_name?' · '+s.group_name:'')+'</div>' +
+          '<div class="down-tempo">Down há '+tempoDecorrido(s.down_desde)+'</div>' +
+        '</div>';
+      });
+    } else {
+      downHtml = '<div class="down-empty">✓ NENHUM SENSOR DOWN</div>';
+    }
+    document.getElementById('tv-down-list').innerHTML = downHtml;
+
+    // Incidentes
+    var incs = d.incidentes_ativos || [];
+    var incHtml = '';
+    if(incs.length){
+      incs.forEach(function(i){
+        var cls = i.impacto === 'critico' ? 'critico' : '';
+        incHtml += '<div class="inc-row '+cls+'">' +
+          '<div class="inc-titulo">⚡ '+i.titulo+'</div>' +
+          '<div class="inc-meta">'+i.tipo.toUpperCase()+' · '+i.impacto.toUpperCase()+' · '+tempoDecorrido(i.aberto_em)+' atrás</div>' +
+        '</div>';
+      });
+    } else {
+      incHtml = '<div class="inc-empty">✓ NENHUM INCIDENTE ATIVO</div>';
+    }
+    document.getElementById('tv-incidentes').innerHTML = incHtml;
+
+    // Alertas recentes
+    var alertas = d.alertas_recentes || [];
+    var altHtml = '';
+    alertas.slice(0,10).forEach(function(a){
+      var icon = a.status_novo === 'DOWN' ? '🔴' : a.status_novo === 'OK' ? '🟢' : '🟡';
+      altHtml += '<div class="alerta-row">' +
+        '<span class="alerta-icon">'+icon+'</span>' +
+        '<div class="alerta-info-tv">' +
+          '<div class="alerta-nome-tv">'+a.sensor_nome+'</div>' +
+          '<div class="alerta-detalhe">'+a.device+' · '+(a.status_anterior||'?')+' → '+a.status_novo+'</div>' +
+        '</div>' +
+        '<div class="alerta-hora">'+(a.ocorreu_em||'').substring(11,16)+'</div>' +
+      '</div>';
+    });
+    document.getElementById('tv-alertas').innerHTML = altHtml ||
+      '<div style="color:var(--dim);font-family:\'Share Tech Mono\',monospace;font-size:12px;padding:8px;">Nenhum alerta recente</div>';
+
+    // Ticker
+    var tickerItems = [];
+    downList.forEach(function(s){
+      tickerItems.push('🔴 DOWN: '+s.nome+' ('+s.device+') há '+tempoDecorrido(s.down_desde));
+    });
+    alertas.slice(0,5).forEach(function(a){
+      var icon = a.status_novo === 'DOWN' ? '🔴' : '🟢';
+      tickerItems.push(icon+' '+a.sensor_nome+' → '+a.status_novo);
+    });
+    if(!tickerItems.length) tickerItems = ['✓ TODOS OS SENSORES OPERACIONAIS'];
+    var tickerHtml = tickerItems.map(function(t){
+      return '<span class="ticker-item">'+ t +'</span>';
+    }).join('<span style="color:var(--border);padding:0 20px">◆</span>');
+    // Duplicar para loop
+    var inner = tickerHtml + '<span style="padding:0 40px"></span>' + tickerHtml;
+    document.getElementById('ticker-inner').innerHTML = inner;
+
+    document.getElementById('tv-sync').textContent =
+      'SYNC ' + new Date().toLocaleTimeString('pt-BR');
+  })
+  .catch(function(e){
+    document.getElementById('tv-sync').textContent = 'ERRO SYNC';
+  });
+}
+
+carregarTV();
+setInterval(carregarTV, REFRESH);
+</script>
+</body>
+</html>

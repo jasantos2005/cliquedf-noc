@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HubNOC — Monitor OLTs</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#070d14;--panel:#0d1a26;--panel2:#111f30;--border:#1a3a5c;
+    --green:#00ff88;--blue:#00aaff;--red:#ff3366;--yellow:#ffcc00;
+    --orange:#ff8800;--text:#c8dde8;--dim:#4a7a9b;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;
+    min-height:100vh;display:flex;flex-direction:column;}
+
+  /* Topbar */
+  .topbar{display:flex;align-items:center;justify-content:space-between;
+    padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--blue);letter-spacing:3px;}
+  .nav-links{display:flex;gap:4px;}
+  .nav-link{padding:6px 14px;font-size:12px;letter-spacing:1px;text-decoration:none;
+    color:var(--dim);border:1px solid transparent;transition:.2s;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;}
+  .nav-link:hover,.nav-link.ativo{color:var(--blue);border-color:var(--border);}
+  .topbar-right{display:flex;align-items:center;gap:16px;}
+  .user-info{font-size:12px;color:var(--dim);font-family:'Share Tech Mono',monospace;}
+  .btn-sair{background:none;border:1px solid var(--border);color:var(--dim);
+    padding:5px 12px;font-size:11px;cursor:pointer;}
+  .btn-sair:hover{border-color:var(--red);color:var(--red);}
+
+  /* Layout principal: lista + detalhe */
+  .layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - 57px);}
+  .lista-col{width:380px;flex-shrink:0;border-right:1px solid var(--border);
+    display:flex;flex-direction:column;overflow:hidden;}
+  .detalhe-col{flex:1;overflow-y:auto;padding:20px 24px;}
+
+  /* Lista OLTs */
+  .lista-header{padding:12px 16px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;}
+  .lista-titulo{font-family:'Share Tech Mono',monospace;font-size:12px;
+    letter-spacing:2px;color:var(--blue);}
+  .lista-body{flex:1;overflow-y:auto;}
+  .lista-body::-webkit-scrollbar{width:4px;}
+  .lista-body::-webkit-scrollbar-thumb{background:var(--border);}
+
+  .olt-item{display:flex;align-items:center;gap:10px;padding:12px 16px;
+    border-bottom:1px solid rgba(26,58,92,.4);cursor:pointer;transition:.2s;
+    position:relative;}
+  .olt-item:hover{background:rgba(0,170,255,.04);}
+  .olt-item.selecionado{background:rgba(0,170,255,.08);border-left:3px solid var(--blue);}
+  .olt-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .dot-ok{background:var(--green);box-shadow:0 0 6px var(--green);}
+  .dot-down{background:var(--red);box-shadow:0 0 8px var(--red);animation:blink 1.5s infinite;}
+  .dot-aviso{background:var(--yellow);}
+  .dot-desc{background:var(--dim);}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+  .olt-item-info{flex:1;min-width:0;}
+  .olt-item-nome{font-size:13px;font-weight:600;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;}
+  .olt-item-sub{font-size:11px;color:var(--dim);margin-top:2px;
+    font-family:'Share Tech Mono',monospace;}
+  .olt-item-stats{text-align:right;flex-shrink:0;}
+  .olt-online{font-size:16px;font-weight:700;color:var(--green);
+    font-family:'Share Tech Mono',monospace;}
+  .olt-total{font-size:10px;color:var(--dim);}
+
+  /* Barra de progresso */
+  .prog-bar{height:3px;background:rgba(255,255,255,.05);margin-top:4px;width:60px;}
+  .prog-fill{height:100%;background:var(--green);transition:.3s;}
+  .prog-fill.med{background:var(--yellow);}
+  .prog-fill.low{background:var(--red);}
+
+  /* Detalhe OLT */
+  .detalhe-vazio{display:flex;align-items:center;justify-content:center;
+    height:100%;color:var(--dim);font-family:'Share Tech Mono',monospace;
+    font-size:14px;flex-direction:column;gap:12px;}
+  .detalhe-vazio span{font-size:40px;}
+
+  .det-header{margin-bottom:20px;}
+  .det-nome{font-size:22px;font-weight:700;margin-bottom:6px;}
+  .det-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;
+    font-family:'Share Tech Mono',monospace;color:var(--dim);}
+  .det-meta span{color:var(--text);}
+
+  /* KPI row */
+  .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+  .kpi-box{background:var(--panel);border:1px solid var(--border);padding:14px;
+    position:relative;overflow:hidden;}
+  .kpi-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+  .kpi-box.g::before{background:var(--green);}
+  .kpi-box.r::before{background:var(--red);}
+  .kpi-box.b::before{background:var(--blue);}
+  .kpi-box.y::before{background:var(--yellow);}
+  .kpi-box-val{font-size:32px;font-weight:700;font-family:'Share Tech Mono',monospace;}
+  .kpi-box-label{font-size:11px;color:var(--dim);letter-spacing:1px;margin-top:4px;}
+  .kpi-box.g .kpi-box-val{color:var(--green);}
+  .kpi-box.r .kpi-box-val{color:var(--red);}
+  .kpi-box.b .kpi-box-val{color:var(--blue);}
+  .kpi-box.y .kpi-box-val{color:var(--yellow);}
+
+  /* Tabs */
+  .tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;}
+  .tab{padding:10px 18px;font-size:12px;font-family:'Share Tech Mono',monospace;
+    letter-spacing:1px;cursor:pointer;color:var(--dim);
+    border-bottom:2px solid transparent;margin-bottom:-1px;transition:.2s;}
+  .tab.ativo{color:var(--blue);border-bottom-color:var(--blue);}
+  .tab-content{display:none;}
+  .tab-content.show{display:block;}
+
+  /* Tabela clientes */
+  .table-wrap{overflow-x:auto;}
+  .data-table{width:100%;border-collapse:collapse;}
+  .data-table th{background:var(--panel);border-bottom:2px solid var(--border);
+    padding:9px 12px;text-align:left;font-size:10px;letter-spacing:2px;
+    color:var(--dim);font-family:'Share Tech Mono',monospace;text-transform:uppercase;
+    white-space:nowrap;}
+  .data-table td{padding:9px 12px;border-bottom:1px solid rgba(26,58,92,.3);
+    font-size:12px;vertical-align:middle;}
+  .data-table tr:hover td{background:rgba(0,170,255,.02);}
+  .badge{display:inline-block;padding:2px 7px;font-size:10px;letter-spacing:1px;
+    font-family:'Share Tech Mono',monospace;border-radius:2px;}
+  .b-on{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.3);}
+  .b-off{background:rgba(255,51,102,.1);color:var(--red);border:1px solid rgba(255,51,102,.3);}
+  .b-reg{background:rgba(0,170,255,.1);color:var(--blue);border:1px solid rgba(0,170,255,.3);}
+  .b-irr{background:rgba(255,136,0,.1);color:var(--orange);border:1px solid rgba(255,136,0,.3);}
+  .b-ind{background:rgba(74,122,155,.1);color:var(--dim);border:1px solid rgba(74,122,155,.3);}
+  .sinal-val{font-family:'Share Tech Mono',monospace;}
+  .sinal-ok{color:var(--green);}
+  .sinal-med{color:var(--yellow);}
+  .sinal-bad{color:var(--red);}
+
+  /* Portas PON */
+  .portas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;}
+  .porta-card{background:var(--panel);border:1px solid var(--border);padding:12px;}
+  .porta-num{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--dim);margin-bottom:6px;}
+  .porta-onus{font-size:20px;font-weight:700;color:var(--blue);font-family:'Share Tech Mono',monospace;}
+  .porta-label{font-size:11px;color:var(--dim);margin-top:2px;}
+  .porta-potencia{font-size:11px;color:var(--green);font-family:'Share Tech Mono',monospace;margin-top:4px;}
+
+  /* Sinal stats */
+  .sinal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+  .sinal-card{background:var(--panel);border:1px solid var(--border);padding:14px;}
+  .sinal-card-titulo{font-size:11px;letter-spacing:2px;color:var(--dim);
+    font-family:'Share Tech Mono',monospace;margin-bottom:8px;text-transform:uppercase;}
+  .sinal-card-val{font-size:28px;font-weight:700;font-family:'Share Tech Mono',monospace;}
+  .sinal-card-sub{font-size:11px;color:var(--dim);margin-top:4px;}
+
+  /* Gráfico */
+  .chart-box{background:var(--panel);border:1px solid var(--border);padding:16px;margin-bottom:16px;}
+  .chart-title{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;
+    color:var(--blue);margin-bottom:12px;text-transform:uppercase;}
+  .chart-container{position:relative;height:200px;}
+
+  /* Busca clientes */
+  .busca-cli{margin-bottom:12px;}
+  .busca-cli input{background:rgba(0,170,255,.05);border:1px solid var(--border);
+    color:var(--text);padding:8px 14px;font-size:13px;width:300px;outline:none;
+    font-family:'Exo 2',sans-serif;}
+  .busca-cli input:focus{border-color:var(--blue);}
+
+  .btn-horas{background:none;border:1px solid var(--border);color:var(--dim);
+    padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Share Tech Mono',monospace;}
+  .btn-horas.ativo{border-color:var(--blue);color:var(--blue);background:rgba(0,170,255,.1);}
+  .stat-trafico{background:var(--panel2);border:1px solid var(--border);
+    padding:8px 14px;font-family:'Share Tech Mono',monospace;}
+  .stat-trafico-val{font-size:20px;font-weight:700;}
+  .stat-trafico-label{font-size:10px;color:var(--dim);letter-spacing:1px;margin-top:2px;}
+  .filtro-cli{background:none;border:1px solid var(--border);color:var(--dim);
+    padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Share Tech Mono',monospace;}
+  .filtro-cli.ativo{border-color:var(--blue);color:var(--blue);}
+  .empty-tab{text-align:center;padding:32px;color:var(--dim);
+    font-family:'Share Tech Mono',monospace;font-size:13px;}
+  .loading{text-align:center;padding:40px;color:var(--dim);
+    font-family:'Share Tech Mono',monospace;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="logo">📡 HubNOC</div>
+    <div class="nav-links">
+      <a class="nav-link" href="/dashboard">Dashboard</a>
+      <a class="nav-link" href="/chamados">Chamados</a>
+      <a class="nav-link" href="/sensores">Sensores</a>
+      <a class="nav-link" href="/incidentes">Incidentes</a>
+      <a class="nav-link" href="/cliente">Clientes</a>
+      <a class="nav-link ativo" href="/olts">OLTs</a>
+      <a class="nav-link" href="/tv" target="_blank">📺 TV</a>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="user-info" id="user-nome">—</div>
+    <button class="btn-sair" onclick="sair()">SAIR</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- Lista lateral -->
+  <div class="lista-col">
+    <div class="lista-header">
+      <span class="lista-titulo">📡 OLTS</span>
+      <span id="lista-count" style="font-size:11px;color:var(--dim);font-family:'Share Tech Mono',monospace;">—</span>
+    </div>
+    <div class="lista-body" id="lista-olts">
+      <div class="loading">Carregando...</div>
+    </div>
+  </div>
+
+  <!-- Detalhe -->
+  <div class="detalhe-col" id="detalhe-col">
+    <div class="detalhe-vazio">
+      <span>📡</span>
+      Selecione uma OLT para ver o detalhe
+    </div>
+  </div>
+</div>
+
+<script>
+var API = '';
+var token = localStorage.getItem('noc_token');
+if(!token){ window.location.href = '/login'; }
+document.getElementById('user-nome').textContent = localStorage.getItem('noc_nome') || '—';
+var oltSelecionada = null;
+var chartOnline = null;
+var todosClientes = [];
+
+function sair(){ localStorage.clear(); window.location.href = '/login'; }
+function headers(){ return {'Authorization':'Bearer '+token}; }
+
+// ── Lista OLTs ────────────────────────────────────────────────
+function carregarLista(){
+  fetch(API+'/api/olts', {headers:headers()})
+  .then(function(r){return r.json();})
+  .then(function(lista){
+    document.getElementById('lista-count').textContent = lista.length+' OLTs';
+    var html = '';
+    lista.forEach(function(o){
+      var pct = o.pct_online || 0;
+      var dotCls = o.prtg_status === 'DOWN' ? 'dot-down'
+        : o.prtg_status === 'Aviso' ? 'dot-aviso'
+        : o.total_clientes > 0 ? 'dot-ok' : 'dot-desc';
+      var progCls = pct >= 90 ? '' : pct >= 70 ? 'med' : 'low';
+      html += '<div class="olt-item" id="olt-item-'+o.olt_id+'" onclick="selecionarOLT('+o.olt_id+')">' +
+        '<span class="olt-dot '+dotCls+'"></span>' +
+        '<div class="olt-item-info">' +
+          '<div class="olt-item-nome" title="'+esc(o.olt_nome)+'">'+esc(o.olt_nome)+'</div>' +
+          '<div class="olt-item-sub">'+esc(o.pop_nome||'—')+' · '+esc(o.modelo||'—')+'</div>' +
+          '<div class="prog-bar"><div class="prog-fill '+progCls+'" style="width:'+pct+'%"></div></div>' +
+        '</div>' +
+        '<div class="olt-item-stats">' +
+          '<div class="olt-online">'+o.online+'</div>' +
+          '<div class="olt-total">/ '+o.total_clientes+'</div>' +
+        '</div>' +
+      '</div>';
+    });
+    document.getElementById('lista-olts').innerHTML = html || '<div class="loading">Nenhuma OLT</div>';
+  }).catch(function(){ document.getElementById('lista-olts').innerHTML = '<div class="loading">Erro ao carregar</div>'; });
+}
+
+// ── Selecionar OLT ────────────────────────────────────────────
+function selecionarOLT(id){
+  oltSelecionada = id;
+  document.querySelectorAll('.olt-item').forEach(function(el){ el.classList.remove('selecionado'); });
+  var el = document.getElementById('olt-item-'+id);
+  if(el) el.classList.add('selecionado');
+  document.getElementById('detalhe-col').innerHTML = '<div class="loading">Carregando detalhes...</div>';
+
+  fetch(API+'/api/olts/'+id, {headers:headers()})
+  .then(function(r){return r.json();})
+  .then(function(d){ renderDetalhe(d); })
+  .catch(function(){ document.getElementById('detalhe-col').innerHTML = '<div class="loading">Erro ao carregar</div>'; });
+}
+
+// ── Render Detalhe ────────────────────────────────────────────
+function renderDetalhe(d){
+  var olt  = d.olt;
+  var res  = d.resumo;
+  var prtg = d.sensor_prtg;
+  todosClientes = d.clientes || [];
+
+  var pctCls = res.pct_online >= 90 ? 'g' : res.pct_online >= 70 ? 'y' : 'r';
+
+  var html = '';
+
+  // Header
+  html += '<div class="det-header">' +
+    '<div class="det-nome">'+esc(olt.olt_nome)+'</div>' +
+    '<div class="det-meta">' +
+      '<span>IP: <span>'+esc(olt.ip||'—')+'</span></span>' +
+      '<span>Modelo: <span>'+esc(olt.modelo||'—')+'</span></span>' +
+      '<span>POP: <span>'+esc(olt.pop_nome||'—')+'</span></span>' +
+      (olt.uptime ? '<span>Uptime: <span style="color:var(--green)">'+esc(olt.uptime)+'</span></span>' : '') +
+      (prtg ? '<span>PRTG: <span style="color:'+(prtg.status==='OK'?'var(--green)':'var(--red)')+'">'+esc(prtg.status)+'</span></span>' : '') +
+      (prtg && prtg.ultimo_valor ? '<span>Tráfego: <span style="color:var(--blue)">'+esc(prtg.ultimo_valor)+'</span></span>' : '') +
+    '</div>' +
+  '</div>';
+
+  // KPIs
+  var problemaCls = res.offline_problema > 0 ? 'r' : 'g';
+  html += '<div class="kpi-row">' +
+    '<div class="kpi-box b"><div class="kpi-box-val">'+res.total+'</div><div class="kpi-box-label">TOTAL CLIENTES</div></div>' +
+    '<div class="kpi-box g"><div class="kpi-box-val">'+res.online+'</div><div class="kpi-box-label">ONLINE ATIVOS</div></div>' +
+    '<div class="kpi-box '+problemaCls+'"><div class="kpi-box-val">'+res.offline_problema+'</div><div class="kpi-box-label">⚠ OFFLINE C/ PROBLEMA</div></div>' +
+    '<div class="kpi-box y"><div class="kpi-box-val">'+(res.suspenso||0)+'</div><div class="kpi-box-label">SUSPENSOS</div></div>' +
+    '<div class="kpi-box '+pctCls+'"><div class="kpi-box-val">'+res.pct_online+'%</div><div class="kpi-box-label">% ONLINE</div></div>' +
+  '</div>';
+
+  // Gráfico pizza online/offline
+  html += '<div class="chart-box" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">' +
+    '<div><div class="chart-title">DISTRIBUIÇÃO ONLINE/OFFLINE</div>' +
+    '<div class="chart-container"><canvas id="chart-pizza"></canvas></div></div>' +
+    '<div><div class="chart-title">SINAL DAS ONUs</div>' +
+    '<div class="chart-container"><canvas id="chart-sinal"></canvas></div></div>' +
+  '</div>';
+
+  // Gráfico tráfego histórico
+  html += '<div class="chart-box" id="box-trafico">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">' +
+      '<div class="chart-title" style="margin:0;">📈 TRÁFEGO DO LINK — HISTÓRICO</div>' +
+      '<div style="display:flex;gap:6px;">' +
+        '<button class="btn-horas ativo" onclick="mudarHoras(1,this)">1H</button>' +
+        '<button class="btn-horas" onclick="mudarHoras(3,this)">3H</button>' +
+        '<button class="btn-horas" onclick="mudarHoras(6,this)">6H</button>' +
+        '<button class="btn-horas" onclick="mudarHoras(12,this)">12H</button>' +
+        '<button class="btn-horas" onclick="mudarHoras(24,this)">24H</button>' +
+      '</div>' +
+    '</div>' +
+    '<div id="stats-trafico" style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;"></div>' +
+    '<div class="chart-container" style="height:220px;"><canvas id="chart-trafico"></canvas></div>' +
+  '</div>';
+  html += '<div class="tabs">' +
+    '<div class="tab ativo" onclick="showTab(\'clientes\',this)">CLIENTES ('+todosClientes.length+')</div>' +
+    '<div class="tab" onclick="showTab(\'portas\',this)">PORTAS PON ('+d.portas.length+')</div>' +
+    '<div class="tab" onclick="showTab(\'sinal\',this)">SINAL ONUs</div>' +
+  '</div>';
+
+  // Tab clientes
+  html += '<div class="tab-content show" id="tab-clientes">' +
+    '<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">' +
+    '<button class="filtro-cli ativo" onclick="filtrarCli(\'\',this)">TODOS ('+todosClientes.length+')</button>' +
+    '<button class="filtro-cli" onclick="filtrarCli(\'offline_problema\',this)" style="border-color:var(--red);color:var(--red)">⚠ PROBLEMA ('+(res.offline_problema||0)+')</button>' +
+    '<button class="filtro-cli" onclick="filtrarCli(\'suspenso\',this)" style="border-color:var(--yellow);color:var(--yellow)">SUSPENSO ('+(res.suspenso||0)+')</button>' +
+    '<button class="filtro-cli" onclick="filtrarCli(\'online\',this)" style="border-color:var(--green);color:var(--green)">ONLINE ('+(res.online||0)+')</button>' +
+    '<button class="filtro-cli" onclick="filtrarCli(\'cancelado\',this)">CANCELADO ('+(res.cancelado||0)+')</button>' +
+    '</div>' +
+    '<div class="busca-cli"><input type="text" id="busca-cli-input" placeholder="Filtrar por nome ou login..." oninput="filtrarClientes()"></div>' +
+    '<div class="table-wrap"><table class="data-table">' +
+    '<thead><tr><th>Cliente</th><th>Login</th><th>Status</th><th>Contrato</th><th>IP</th>' +
+    '<th>Sinal RX</th><th>Potência</th><th>Última Queda</th><th>PON/Slot/ONU</th></tr></thead>' +
+    '<tbody id="tbody-clientes"></tbody></table></div>' +
+  '</div>';
+
+  // Tab portas
+  html += '<div class="tab-content" id="tab-portas">';
+  if(d.portas.length){
+    html += '<div class="portas-grid">';
+    d.portas.forEach(function(p){
+      html += '<div class="porta-card">' +
+        '<div class="porta-num">PON '+p.numero_pon+(p.descricao?' · '+esc(p.descricao):'')+'</div>' +
+        '<div class="porta-onus">'+p.quantidade_onus+'</div>' +
+        '<div class="porta-label">ONUs online</div>' +
+        '<div style="font-size:11px;color:var(--dim);margin-top:2px;">'+p.quantidade_onus_autorizadas+' autorizadas</div>' +
+        (p.potencia_pon ? '<div class="porta-potencia">Pot: '+p.potencia_pon+' dBm</div>' : '') +
+      '</div>';
+    });
+    html += '</div>';
+  } else {
+    html += '<div class="empty-tab">Nenhuma porta PON cadastrada</div>';
+  }
+  html += '</div>';
+
+  // Tab sinal
+  html += '<div class="tab-content" id="tab-sinal">';
+  if(d.sinal_stats.length){
+    html += '<div class="sinal-grid">';
+    d.sinal_stats.forEach(function(s){
+      var cor = s.status==='regular'?'var(--green)':s.status==='irregular'?'var(--red)':'var(--dim)';
+      html += '<div class="sinal-card">' +
+        '<div class="sinal-card-titulo">'+esc(s.status||'indefinido')+'</div>' +
+        '<div class="sinal-card-val" style="color:'+cor+'">'+s.qtd+'</div>' +
+        '<div class="sinal-card-sub">Sinal médio: '+s.sinal_medio+' dBm</div>' +
+        '<div class="sinal-card-sub">Min: '+s.sinal_min+' / Max: '+s.sinal_max+' dBm</div>' +
+      '</div>';
+    });
+    html += '</div>';
+    // Tabela clientes com sinal ruim
+    var ruins = todosClientes.filter(function(c){ return c.sinal_rx && c.sinal_rx < -27; });
+    if(ruins.length){
+      html += '<div style="font-family:\'Share Tech Mono\',monospace;font-size:11px;color:var(--red);' +
+        'letter-spacing:2px;margin-bottom:8px;">⚠ CLIENTES COM SINAL RUIM (< -27 dBm)</div>';
+      html += '<div class="table-wrap"><table class="data-table">' +
+        '<thead><tr><th>Cliente</th><th>Login</th><th>Sinal RX</th><th>Status</th><th>PON/Slot/ONU</th></tr></thead><tbody>';
+      ruins.forEach(function(c){
+        html += '<tr>' +
+          '<td>'+esc(c.cliente_nome||'—')+'</td>' +
+          '<td style="font-family:\'Share Tech Mono\',monospace;">'+esc(c.login)+'</td>' +
+          '<td class="sinal-val sinal-bad">'+c.sinal_rx+' dBm</td>' +
+          '<td><span class="badge b-irr">'+esc(c.status_potencia||'—')+'</span></td>' +
+          '<td style="font-family:\'Share Tech Mono\',monospace;font-size:11px;color:var(--dim);">'+
+            (c.ponno||'—')+'/'+( c.slotno||'—')+'/'+( c.onu_numero||'—')+'</td>' +
+        '</tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+  } else {
+    html += '<div class="empty-tab">Dados de sinal não disponíveis</div>';
+  }
+  html += '</div>';
+
+  document.getElementById('detalhe-col').innerHTML = html;
+
+  // Renderizar tabela de clientes
+  renderTabelaClientes(todosClientes);
+
+  // Gráfico tráfego
+  setTimeout(function(){ carregarGraficoTrafico(d.olt.olt_id, 1); }, 200);
+
+  // Gráficos
+  setTimeout(function(){
+    // Pizza online/offline
+    var ctx1 = document.getElementById('chart-pizza');
+    if(ctx1){
+      new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+          labels: ['Online', 'Offline'],
+          datasets:[{
+            data: [res.online, res.offline],
+            backgroundColor: ['rgba(0,255,136,.7)', 'rgba(255,51,102,.7)'],
+            borderColor: ['#00ff88','#ff3366'],
+            borderWidth: 1
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{
+            legend:{labels:{color:'#c8dde8',font:{size:11}}},
+            tooltip:{callbacks:{label:function(c){ return c.label+': '+c.parsed; }}}
+          }
+        }
+      });
+    }
+
+    // Sinal ONUs
+    var ctx2 = document.getElementById('chart-sinal');
+    if(ctx2 && d.sinal_stats.length){
+      var labels = d.sinal_stats.map(function(s){ return s.status||'indefinido'; });
+      var values = d.sinal_stats.map(function(s){ return s.qtd; });
+      var cores  = d.sinal_stats.map(function(s){
+        return s.status==='regular'?'rgba(0,255,136,.7)':
+               s.status==='irregular'?'rgba(255,136,0,.7)':'rgba(74,122,155,.5)';
+      });
+      new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets:[{data:values,backgroundColor:cores,borderWidth:0}]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:'#4a7a9b'},grid:{color:'rgba(26,58,92,.5)'}},
+            y:{ticks:{color:'#4a7a9b'},grid:{color:'rgba(26,58,92,.5)'}}
+          }
+        }
+      });
+    }
+  }, 100);
+}
+
+function renderTabelaClientes(lista){
+  var tbody = document.getElementById('tbody-clientes');
+  if(!tbody) return;
+  if(!lista.length){
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-tab">Nenhum cliente</td></tr>';
+    return;
+  }
+  var html = '';
+  lista.forEach(function(c){
+    var classeBadge = {
+      'online':           '<span class="badge b-on">ONLINE</span>',
+      'online_inativo':   '<span class="badge b-on">ONLINE</span>',
+      'suspenso':         '<span class="badge" style="background:rgba(255,204,0,.1);color:var(--yellow);border:1px solid rgba(255,204,0,.3)">SUSPENSO</span>',
+      'offline_problema': '<span class="badge b-off">⚠ PROBLEMA</span>',
+      'cancelado':        '<span class="badge b-ind">CANCELADO</span>',
+    }[c.classe] || '<span class="badge b-ind">—</span>';
+
+    var contratoMap = {'A':'<span style="color:var(--green)">ATIVO</span>',
+      'I':'<span style="color:var(--red)">INATIVO</span>',
+      'D':'<span style="color:var(--dim)">DESATIVADO</span>'};
+    var contratoBadge = contratoMap[c.contrato_status] || esc(c.contrato_status||'—');
+
+    var sinRxCls = !c.sinal_rx ? '' : c.sinal_rx >= -25 ? 'sinal-ok' : c.sinal_rx >= -27 ? 'sinal-med' : 'sinal-bad';
+    var sinRxTxt = c.sinal_rx ? c.sinal_rx+' dBm' : '—';
+    var sinBadge = !c.status_potencia ? '' :
+      c.status_potencia==='regular' ? '<span class="badge b-reg">regular</span>' :
+      c.status_potencia==='irregular' ? '<span class="badge b-irr">irregular</span>' :
+      '<span class="badge b-ind">'+esc(c.status_potencia)+'</span>';
+
+    html += '<tr>' +
+      '<td>'+esc(c.cliente_nome||'—')+'</td>' +
+      '<td style="font-family:\'Share Tech Mono\',monospace;font-size:11px;">'+esc(c.login)+'</td>' +
+      '<td>'+classeBadge+'</td>' +
+      '<td>'+contratoBadge+'</td>' +
+      '<td style="font-family:\'Share Tech Mono\',monospace;font-size:11px;color:var(--dim);">'+esc(c.ip||'—')+'</td>' +
+      '<td class="sinal-val '+sinRxCls+'">'+sinRxTxt+'</td>' +
+      '<td>'+sinBadge+'</td>' +
+      '<td style="font-size:11px;color:var(--dim);">'+esc(c.causa_ultima_queda||'—')+'</td>' +
+      '<td style="font-family:\'Share Tech Mono\',monospace;font-size:11px;color:var(--dim);">'+
+        (c.ponno||'—')+'/'+( c.slotno||'—')+'/'+( c.onu_numero||'—')+'</td>' +
+    '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+var filtroCliAtual = '';
+
+function filtrarCli(classe, el){
+  filtroCliAtual = classe;
+  document.querySelectorAll('.filtro-cli').forEach(function(b){ b.classList.remove('ativo'); });
+  el.classList.add('ativo');
+  filtrarClientes();
+}
+
+function filtrarClientes(){
+  var q = (document.getElementById('busca-cli-input').value||'').toLowerCase();
+  var filtrados = todosClientes.filter(function(c){
+    var matchClasse = !filtroCliAtual || c.classe === filtroCliAtual;
+    var matchBusca  = !q ||
+      (c.cliente_nome||'').toLowerCase().includes(q) ||
+      (c.login||'').toLowerCase().includes(q);
+    return matchClasse && matchBusca;
+  });
+  renderTabelaClientes(filtrados);
+}
+
+function showTab(nome, el){
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('ativo'); });
+  document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('show'); });
+  el.classList.add('ativo');
+  document.getElementById('tab-'+nome).classList.add('show');
+}
+
+function esc(s){return (s||'').replace(/[&<>"']/g,function(c){
+  return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+var chartTrafico = null;
+var horasAtual = 1;
+
+function carregarGraficoTrafico(oltId, horas){
+  horasAtual = horas || 1;
+  fetch(API+'/api/olts/'+oltId+'/grafico?horas='+horasAtual, {headers:headers()})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.detail){ return; }
+    var pontos = d.pontos || [];
+    var stats  = d.stats  || {};
+
+    // Stats
+    var statsEl = document.getElementById('stats-trafico');
+    if(statsEl){
+      statsEl.innerHTML =
+        '<div class="stat-trafico"><div class="stat-trafico-val" style="color:var(--blue)">'+stats.atual+' Mb/s</div><div class="stat-trafico-label">ATUAL</div></div>' +
+        '<div class="stat-trafico"><div class="stat-trafico-val" style="color:var(--red)">'+stats.pico+' Mb/s</div><div class="stat-trafico-label">PICO</div></div>' +
+        '<div class="stat-trafico"><div class="stat-trafico-val" style="color:var(--yellow)">'+stats.media+' Mb/s</div><div class="stat-trafico-label">MÉDIA</div></div>' +
+        '<div class="stat-trafico"><div class="stat-trafico-val" style="color:var(--green)">'+stats.minimo+' Mb/s</div><div class="stat-trafico-label">MÍNIMO</div></div>';
+    }
+
+    // Amostrar pontos para não sobrecarregar o gráfico
+    var step = Math.max(1, Math.floor(pontos.length / 60));
+    var amostras = pontos.filter(function(_, i){ return i % step === 0; });
+    var labels = amostras.map(function(p){ return p.hora; });
+    var valores = amostras.map(function(p){ return p.mbps; });
+
+    var ctx = document.getElementById('chart-trafico');
+    if(!ctx) return;
+
+    if(chartTrafico){ chartTrafico.destroy(); }
+    chartTrafico = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets:[{
+          label: 'Tráfego (Mbit/s)',
+          data: valores,
+          borderColor: '#00aaff',
+          backgroundColor: 'rgba(0,170,255,.08)',
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          fill: true,
+          tension: 0.3
+        },{
+          label: 'Pico',
+          data: valores.map(function(){ return stats.pico; }),
+          borderColor: 'rgba(255,51,102,.5)',
+          borderWidth: 1,
+          borderDash: [4,4],
+          pointRadius: 0,
+          fill: false,
+        },{
+          label: 'Média',
+          data: valores.map(function(){ return stats.media; }),
+          borderColor: 'rgba(255,204,0,.4)',
+          borderWidth: 1,
+          borderDash: [4,4],
+          pointRadius: 0,
+          fill: false,
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{labels:{color:'#4a7a9b',font:{size:10}}},
+          tooltip:{callbacks:{label:function(c){ return c.dataset.label+': '+c.parsed.y+' Mb/s'; }}}
+        },
+        scales:{
+          x:{ticks:{color:'#4a7a9b',maxTicksLimit:12,font:{size:10}},
+             grid:{color:'rgba(26,58,92,.3)'}},
+          y:{ticks:{color:'#4a7a9b',font:{size:10},callback:function(v){ return v+' Mb/s'; }},
+             grid:{color:'rgba(26,58,92,.3)'}, beginAtZero:true}
+        }
+      }
+    });
+  }).catch(function(){});
+}
+
+function mudarHoras(h, el){
+  document.querySelectorAll('.btn-horas').forEach(function(b){ b.classList.remove('ativo'); });
+  el.classList.add('ativo');
+  carregarGraficoTrafico(oltSelecionada, h);
+}
+
+carregarLista();
+setInterval(carregarLista, 60000);
+</script>
+</body>
+</html>
