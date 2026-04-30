@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HubNOC — Administração</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+:root{
+  --bg:#0a0f1a;--surf:#0f1623;--surf2:#151e2e;--surf3:#1a2438;
+  --border:#1e2d45;--border2:#243450;
+  --text:#e2eaf4;--text2:#8ba3be;--text3:#4a6580;
+  --blue:#00aaff;--blue2:#0090dd;--green:#00e5a0;
+  --red:#ff4466;--amber:#ffb830;--purple:#a78bfa;--orange:#fb923c;
+  --radius:12px;--radius2:8px;
+  --font:'Inter',system-ui,sans-serif;
+  --topbar-h:56px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;overflow:hidden;}
+#shell{display:flex;height:100vh;flex-direction:column;}
+
+/* ── TOPBAR ── */
+#topbar{
+  height:var(--topbar-h);background:var(--surf);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:16px;flex-shrink:0;
+  position:relative;
+}
+#topbar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--purple),transparent);}
+.tb-brand{display:flex;align-items:center;gap:10px;}
+.tb-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--blue),#004488);display:flex;align-items:center;justify-content:center;}
+.tb-icon svg{width:16px;height:16px;color:#fff;}
+.tb-name{font-size:16px;font-weight:900;letter-spacing:-.3px;}
+.tb-name span{color:var(--blue);}
+.tb-sep{width:1px;height:20px;background:var(--border);}
+.tb-title{font-size:14px;font-weight:600;color:var(--text2);}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.tb-user{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3);}
+.tb-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#000;}
+.tb-nav{display:flex;gap:4px;}
+.tb-link{padding:6px 12px;border-radius:var(--radius2);font-size:12px;font-weight:500;color:var(--text3);text-decoration:none;cursor:pointer;transition:.15s;}
+.tb-link:hover{background:var(--surf2);color:var(--text);}
+.tb-link.ativo{background:rgba(0,170,255,.1);color:var(--blue);}
+.btn-sair{background:rgba(255,68,102,.08);border:1px solid rgba(255,68,102,.2);color:var(--red);padding:6px 14px;border-radius:var(--radius2);font-size:12px;font-weight:600;cursor:pointer;transition:.15s;}
+.btn-sair:hover{background:rgba(255,68,102,.16);}
+
+/* ── CONTENT ── */
+#content{flex:1;overflow-y:auto;padding:28px 32px;}
+#content::-webkit-scrollbar{width:4px;}
+#content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+
+/* ── TABS ── */
+.page-tabs{display:flex;gap:2px;background:var(--surf2);border-radius:var(--radius2);padding:4px;margin-bottom:24px;width:fit-content;}
+.ptab{padding:8px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text3);transition:.15s;}
+.ptab.ativo{background:var(--surf3);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.ptab:hover:not(.ativo){color:var(--text2);}
+
+.page{display:none;}
+.page.ativo{display:block;}
+
+/* ── SECTION ── */
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.sec-title{font-size:15px;font-weight:800;}
+.sec-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+
+/* ── CARDS STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--ac,var(--blue));}
+.stat-val{font-size:30px;font-weight:900;color:var(--ac,var(--blue));line-height:1;}
+.stat-label{font-size:11px;color:var(--text3);margin-top:4px;font-weight:500;}
+
+/* ── TABELA USUÁRIOS ── */
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead th{text-align:left;padding:10px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);border-bottom:2px solid var(--border);}
+tbody td{padding:12px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:rgba(0,170,255,.03);}
+
+/* Avatares */
+.u-row{display:flex;align-items:center;gap:10px;}
+.u-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#000;flex-shrink:0;}
+.u-nome{font-size:13px;font-weight:600;}
+.u-login{font-size:11px;color:var(--text3);margin-top:1px;font-family:monospace;}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+.b-admin{background:rgba(255,68,102,.1);color:var(--red);}
+.b-supervisor{background:rgba(0,170,255,.1);color:var(--blue);}
+.b-atendente{background:rgba(0,229,160,.1);color:var(--green);}
+.b-inativo{background:rgba(74,101,128,.1);color:var(--text3);}
+.b-online{background:rgba(0,229,160,.1);color:var(--green);}
+
+/* Botões ação */
+.btn-acao{padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;border:none;cursor:pointer;transition:.15s;}
+.btn-edit{background:var(--surf2);color:var(--text2);border:1px solid var(--border);}
+.btn-edit:hover{background:var(--surf3);color:var(--text);}
+.btn-pass{background:rgba(255,184,48,.08);color:var(--amber);border:1px solid rgba(255,184,48,.2);}
+.btn-block{background:rgba(255,68,102,.08);color:var(--red);border:1px solid rgba(255,68,102,.2);}
+.btn-unblock{background:rgba(0,229,160,.08);color:var(--green);border:1px solid rgba(0,229,160,.2);}
+.btn-del{background:rgba(255,68,102,.08);color:var(--red);border:1px solid rgba(255,68,102,.2);}
+
+/* ── BTN PRIMÁRIO ── */
+.btn-primary{
+  display:inline-flex;align-items:center;gap:6px;
+  background:linear-gradient(135deg,var(--blue),#0077cc);
+  color:#fff;border:none;border-radius:var(--radius2);
+  padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;
+  box-shadow:0 2px 10px rgba(0,170,255,.2);
+}
+.btn-primary:hover{background:linear-gradient(135deg,#0099ee,#0066bb);transform:translateY(-1px);}
+.btn-outline{display:inline-flex;align-items:center;gap:6px;background:var(--surf2);color:var(--text2);border:1px solid var(--border);border-radius:var(--radius2);padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;}
+.btn-outline:hover{background:var(--surf3);color:var(--text);}
+
+/* ── GRUPOS ── */
+.grupos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
+.grupo-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden;}
+.grupo-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:var(--gc,var(--blue));}
+.grupo-nome{font-size:15px;font-weight:800;margin-bottom:4px;}
+.grupo-desc{font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.5;}
+.grupo-stats{display:flex;gap:16px;}
+.gs-item{text-align:center;}
+.gs-val{font-size:20px;font-weight:900;color:var(--gc,var(--blue));}
+.gs-label{font-size:10px;color:var(--text3);margin-top:2px;}
+
+/* ── PERMISSÕES ── */
+.perm-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+.perm-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surf2);color:var(--text3);transition:.15s;}
+.perm-tab.ativo{border-color:var(--blue);color:var(--blue);background:rgba(0,170,255,.08);}
+
+.perm-section{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;}
+.perm-sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+.perm-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.perm-item:last-child{border-bottom:none;}
+.pi-info .pi-name{font-size:13px;font-weight:600;}
+.pi-info .pi-desc{font-size:11px;color:var(--text3);margin-top:2px;}
+.pi-nivel{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;}
+.pi-admin{background:rgba(255,68,102,.1);color:var(--red);}
+.pi-sup{background:rgba(0,170,255,.1);color:var(--blue);}
+.pi-all{background:rgba(0,229,160,.1);color:var(--green);}
+
+/* Toggle switch */
+.toggle{width:40px;height:22px;border-radius:11px;background:var(--border2);border:none;cursor:pointer;position:relative;transition:.2s;flex-shrink:0;}
+.toggle.on{background:var(--blue);}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.toggle.on::after{left:21px;}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.overlay.show{display:flex;}
+.modal{
+  background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);
+  padding:24px;width:460px;max-width:95vw;max-height:85vh;overflow-y:auto;
+  animation:fadeIn .2s ease;position:relative;
+}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:var(--radius) var(--radius) 0 0;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.modal-hd h3{font-size:16px;font-weight:800;}
+.btn-close{background:var(--surf2);border:1px solid var(--border);color:var(--text3);width:28px;height:28px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:.15s;}
+.btn-close:hover{color:var(--text);background:var(--surf3);}
+.mf{margin-bottom:14px;}
+.mf label{display:block;font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px;letter-spacing:.4px;text-transform:uppercase;}
+.mf input,.mf select,.mf textarea{
+  width:100%;background:var(--surf2);border:1px solid var(--border2);
+  border-radius:var(--radius2);padding:10px 12px;font-size:13px;
+  color:var(--text);outline:none;font-family:var(--font);transition:.2s;
+}
+.mf input:focus,.mf select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,170,255,.1);}
+.mf select option{background:var(--surf2);}
+.mf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-ft{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+.nivel-info{background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:8px;font-size:12px;color:var(--text3);}
+.nivel-info strong{color:var(--text);}
+
+/* Empty state */
+.empty{text-align:center;padding:40px;color:var(--text3);}
+.empty .ei{font-size:36px;margin-bottom:10px;opacity:.5;}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;right:24px;padding:11px 20px;border-radius:var(--radius2);font-size:12px;font-weight:600;opacity:0;transition:all .25s;z-index:999;pointer-events:none;background:var(--surf2);border:1px solid var(--border);}
+#toast.show{opacity:1;}
+#toast.ok{border-color:rgba(0,229,160,.4);color:var(--green);background:rgba(0,229,160,.05);}
+#toast.err{border-color:rgba(255,68,102,.4);color:var(--red);background:rgba(255,68,102,.05);}
+#toast.info{border-color:rgba(0,170,255,.4);color:var(--blue);background:rgba(0,170,255,.05);}
+
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.2);border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div id="shell">
+
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="tb-brand">
+      <div class="tb-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+      </div>
+      <div class="tb-name">Hub<span>NOC</span></div>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-title">Administração do Sistema</div>
+    <div class="tb-nav">
+      <a class="tb-link" href="/dashboard">Dashboard</a>
+      <a class="tb-link" href="/chamados">Chamados</a>
+      <a class="tb-link" href="/sensores">Sensores</a>
+      <a class="tb-link" href="/olts">OLTs</a>
+      <a class="tb-link" href="/mapa">Mapa</a>
+      <a class="tb-link ativo" href="/admin">Admin</a>
+      <a class="tb-link" href="/tv" target="_blank">📺 TV</a>
+    </div>
+    <div class="tb-right">
+      <div class="tb-user">
+        <div class="tb-avatar" id="tb-av">A</div>
+        <span id="tb-nome">—</span>
+      </div>
+      <button class="btn-sair" onclick="sair()">Sair</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+
+    <!-- Tabs -->
+    <div class="page-tabs">
+      <div class="ptab ativo" onclick="showPage('usuarios',this)">👥 Usuários</div>
+      <div class="ptab" onclick="showPage('grupos',this)">🏷️ Grupos</div>
+      <div class="ptab" onclick="showPage('permissoes',this)">🔐 Permissões</div>
+    </div>
+
+    <!-- ── USUÁRIOS ── -->
+    <div class="page ativo" id="page-usuarios">
+      <div class="stats-row" id="stats-usuarios"></div>
+      <div class="card">
+        <div class="sec-hd">
+          <div>
+            <div class="sec-title">Usuários do Sistema</div>
+            <div class="sec-sub">Gerencie quem pode acessar o HubNOC e com qual nível</div>
+          </div>
+          <button class="btn-primary" onclick="abrirModalCriar()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Novo Usuário
+          </button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th>Nível</th>
+                <th>Status</th>
+                <th>Cadastrado em</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-usuarios">
+              <tr><td colspan="5" class="empty"><div class="ei">👥</div><p>Carregando...</p></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── GRUPOS ── -->
+    <div class="page" id="page-grupos">
+      <div class="sec-hd" style="margin-bottom:20px;">
+        <div>
+          <div class="sec-title">Grupos de Acesso</div>
+          <div class="sec-sub">Cada grupo define o nível de permissão no sistema</div>
+        </div>
+      </div>
+      <div class="grupos-grid">
+        <div class="grupo-card" style="--gc:var(--red);">
+          <div class="grupo-nome">🔴 Administrador</div>
+          <div class="grupo-desc">Acesso total ao sistema. Pode criar usuários, alterar permissões e ver todas as funcionalidades.</div>
+          <div class="grupo-stats">
+            <div class="gs-item"><div class="gs-val" id="g-admin-count">—</div><div class="gs-label">usuários</div></div>
+            <div class="gs-item"><div class="gs-val" style="color:var(--red);">99</div><div class="gs-label">nível</div></div>
+          </div>
+        </div>
+        <div class="grupo-card" style="--gc:var(--blue);">
+          <div class="grupo-nome">🔵 Supervisor</div>
+          <div class="grupo-desc">Acesso a incidentes, sensores, OLTs, chamados e relatórios. Não pode gerenciar usuários.</div>
+          <div class="grupo-stats">
+            <div class="gs-item"><div class="gs-val" id="g-sup-count">—</div><div class="gs-label">usuários</div></div>
+            <div class="gs-item"><div class="gs-val" style="color:var(--blue);">50</div><div class="gs-label">nível</div></div>
+          </div>
+        </div>
+        <div class="grupo-card" style="--gc:var(--green);">
+          <div class="grupo-nome">🟢 Atendente</div>
+          <div class="grupo-desc">Acesso ao dashboard, chamados e consulta de clientes. Não acessa incidentes críticos nem admin.</div>
+          <div class="grupo-stats">
+            <div class="gs-item"><div class="gs-val" id="g-at-count">—</div><div class="gs-label">usuários</div></div>
+            <div class="gs-item"><div class="gs-val" style="color:var(--green);">10</div><div class="gs-label">nível</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabela de níveis -->
+      <div class="card">
+        <div class="sec-hd"><div class="sec-title">Mapa de Níveis de Acesso</div></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr><th>Funcionalidade</th><th>Atendente (10)</th><th>Supervisor (50)</th><th>Administrador (99)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Dashboard</td><td>✅</td><td>✅</td><td>✅</td></tr>
+              <tr><td>Chamados (abrir/atribuir)</td><td>✅</td><td>✅</td><td>✅</td></tr>
+              <tr><td>Consulta de Clientes</td><td>✅</td><td>✅</td><td>✅</td></tr>
+              <tr><td>TV NOC</td><td>✅</td><td>✅</td><td>✅</td></tr>
+              <tr><td>Monitor Sensores PRTG</td><td>❌</td><td>✅</td><td>✅</td></tr>
+              <tr><td>Monitor OLTs</td><td>❌</td><td>✅</td><td>✅</td></tr>
+              <tr><td>Mapa de Rede</td><td>❌</td><td>✅</td><td>✅</td></tr>
+              <tr><td>Incidentes (criar/resolver)</td><td>❌</td><td>✅</td><td>✅</td></tr>
+              <tr><td>Administração de Usuários</td><td>❌</td><td>❌</td><td>✅</td></tr>
+              <tr><td>Permissões e Grupos</td><td>❌</td><td>❌</td><td>✅</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PERMISSÕES ── -->
+    <div class="page" id="page-permissoes">
+      <div class="sec-hd" style="margin-bottom:16px;">
+        <div>
+          <div class="sec-title">Permissões por Grupo</div>
+          <div class="sec-sub">Configure o que cada grupo pode acessar no HubNOC</div>
+        </div>
+        <button class="btn-primary" onclick="salvarPermissoes()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Salvar Permissões
+        </button>
+      </div>
+
+      <div class="perm-tabs">
+        <div class="perm-tab ativo" onclick="selGrupo('atendente',this)">🟢 Atendente (10)</div>
+        <div class="perm-tab" onclick="selGrupo('supervisor',this)">🔵 Supervisor (50)</div>
+        <div class="perm-tab" onclick="selGrupo('admin',this)">🔴 Administrador (99)</div>
+      </div>
+
+      <div id="perm-content"></div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /shell -->
+
+<!-- Modal Criar/Editar Usuário -->
+<div class="overlay" id="modal-usuario">
+  <div class="modal">
+    <div class="modal-hd">
+      <h3 id="mu-titulo">Novo Usuário</h3>
+      <button class="btn-close" onclick="fecharModal('modal-usuario')">×</button>
+    </div>
+    <div class="mf-grid">
+      <div class="mf">
+        <label>Nome completo</label>
+        <input type="text" id="mu-nome" placeholder="Nome do operador">
+      </div>
+      <div class="mf">
+        <label>Login</label>
+        <input type="text" id="mu-login" placeholder="login.usuario" autocapitalize="none">
+      </div>
+    </div>
+    <div class="mf">
+      <label id="mu-senha-label">Senha</label>
+      <input type="password" id="mu-senha" placeholder="Mínimo 6 caracteres">
+    </div>
+    <div class="mf">
+      <label>Nível de Acesso</label>
+      <select id="mu-nivel" onchange="atualizarInfoNivel()">
+        <option value="10">Atendente — acesso básico (dashboard + chamados)</option>
+        <option value="50">Supervisor — acesso avançado (OLTs + sensores + incidentes)</option>
+        <option value="99">Administrador — acesso total (inclui gestão de usuários)</option>
+      </select>
+      <div class="nivel-info" id="nivel-info">
+        <strong>Atendente:</strong> Dashboard, chamados, consulta de clientes e TV NOC.
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-outline" onclick="fecharModal('modal-usuario')">Cancelar</button>
+      <button class="btn-primary" onclick="salvarUsuario()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+        <span id="mu-btn-txt">Criar Usuário</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Redefinir Senha -->
+<div class="overlay" id="modal-senha">
+  <div class="modal">
+    <div class="modal-hd">
+      <h3 id="ms-titulo">Redefinir Senha</h3>
+      <button class="btn-close" onclick="fecharModal('modal-senha')">×</button>
+    </div>
+    <div class="mf">
+      <label>Nova Senha</label>
+      <input type="password" id="ms-senha" placeholder="Mínimo 6 caracteres">
+    </div>
+    <div class="mf">
+      <label>Confirmar Senha</label>
+      <input type="password" id="ms-confirma" placeholder="Repita a senha">
+    </div>
+    <div id="ms-err" style="color:var(--red);font-size:12px;margin-top:4px;"></div>
+    <div class="modal-ft">
+      <button class="btn-outline" onclick="fecharModal('modal-senha')">Cancelar</button>
+      <button class="btn-primary" onclick="confirmarSenha()">Salvar Senha</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var API = '';
+var token = localStorage.getItem('noc_token');
+var nivel = parseInt(localStorage.getItem('noc_nivel') || '0');
+if(!token || nivel < 99){ window.location.href = '/dashboard'; }
+
+document.getElementById('tb-nome').textContent = localStorage.getItem('noc_nome') || '—';
+document.getElementById('tb-av').textContent = (localStorage.getItem('noc_nome') || 'A').charAt(0).toUpperCase();
+
+function sair(){ localStorage.clear(); window.location.href = '/login'; }
+function headers(){ return {'Content-Type':'application/json','Authorization':'Bearer '+token}; }
+
+// ── Navegação ──────────────────────────────────────────────
+function showPage(nome, el){
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('ativo'); });
+  document.querySelectorAll('.ptab').forEach(function(t){ t.classList.remove('ativo'); });
+  document.getElementById('page-'+nome).classList.add('ativo');
+  el.classList.add('ativo');
+  if(nome === 'usuarios') carregarUsuarios();
+  if(nome === 'grupos') carregarGrupos();
+  if(nome === 'permissoes') renderPermissoes();
+}
+
+// ── Usuários ───────────────────────────────────────────────
+var usuariosLista = [];
+var editandoId = null;
+
+function carregarUsuarios(){
+  fetch(API+'/api/admin/usuarios', {headers:headers()})
+  .then(function(r){return r.json();})
+  .then(function(lista){
+    usuariosLista = lista;
+    renderUsuarios(lista);
+    renderStats(lista);
+  }).catch(function(){});
+}
+
+function renderStats(lista){
+  var admin = lista.filter(function(u){ return u.nivel >= 99 && u.ativo; }).length;
+  var sup   = lista.filter(function(u){ return u.nivel >= 50 && u.nivel < 99 && u.ativo; }).length;
+  var at    = lista.filter(function(u){ return u.nivel < 50 && u.ativo; }).length;
+  var inat  = lista.filter(function(u){ return !u.ativo; }).length;
+  document.getElementById('stats-usuarios').innerHTML =
+    kpiCard('Total', lista.length, 'var(--blue)') +
+    kpiCard('Administradores', admin, 'var(--red)') +
+    kpiCard('Supervisores', sup, 'var(--blue)') +
+    kpiCard('Atendentes', at, 'var(--green)');
+}
+
+function kpiCard(label, val, cor){
+  return '<div class="stat-card" style="--ac:'+cor+'">'+
+    '<div class="stat-val">'+val+'</div>'+
+    '<div class="stat-label">'+label+'</div>'+
+  '</div>';
+}
+
+var nivelMap = {
+  99: {label:'Administrador', cls:'b-admin'},
+  50: {label:'Supervisor',    cls:'b-supervisor'},
+  10: {label:'Atendente',     cls:'b-atendente'},
+};
+
+function renderUsuarios(lista){
+  var tbody = document.getElementById('tbody-usuarios');
+  if(!lista || !lista.length){
+    tbody.innerHTML = '<tr><td colspan="5" class="empty"><div class="ei">👥</div><p>Nenhum usuário cadastrado</p></td></tr>';
+    return;
+  }
+  var html = '';
+  lista.forEach(function(u){
+    var nv = nivelMap[u.nivel] || {label:'Nível '+u.nivel, cls:'b-atendente'};
+    var cor = u.nivel >= 99 ? '#ff4466' : u.nivel >= 50 ? '#00aaff' : '#00e5a0';
+    var avBg = 'linear-gradient(135deg,'+cor+','+cor+'88)';
+    html += '<tr>'+
+      '<td><div class="u-row">'+
+        '<div class="u-av" style="background:'+avBg+'">'+u.nome.charAt(0).toUpperCase()+'</div>'+
+        '<div><div class="u-nome">'+esc(u.nome)+'</div>'+
+        '<div class="u-login">'+esc(u.login)+'</div></div>'+
+      '</div></td>'+
+      '<td><span class="badge '+nv.cls+'">'+nv.label+'</span></td>'+
+      '<td>'+(u.ativo ? '<span class="badge b-online">● Ativo</span>' : '<span class="badge b-inativo">○ Inativo</span>')+'</td>'+
+      '<td style="color:var(--text3);font-size:12px;">'+(u.criado_em||'').substring(0,10)+'</td>'+
+      '<td><div style="display:flex;gap:6px;">'+
+        '<button class="btn-acao btn-edit" onclick="abrirModalEditar('+u.id+')">✏ Editar</button>'+
+        '<button class="btn-acao btn-pass" onclick="abrirModalSenha('+u.id+',\''+esc(u.nome)+'\')">🔑 Senha</button>'+
+        (u.ativo
+          ? '<button class="btn-acao btn-block" onclick="toggleAtivo('+u.id+',0,\''+esc(u.nome)+'\')">🚫 Bloquear</button>'
+          : '<button class="btn-acao btn-unblock" onclick="toggleAtivo('+u.id+',1,\''+esc(u.nome)+'\')">✅ Ativar</button>')+
+      '</div></td>'+
+    '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+function carregarGrupos(){
+  fetch(API+'/api/admin/usuarios', {headers:headers()})
+  .then(function(r){return r.json();})
+  .then(function(lista){
+    var admin = lista.filter(function(u){ return u.nivel >= 99 && u.ativo; }).length;
+    var sup   = lista.filter(function(u){ return u.nivel >= 50 && u.nivel < 99 && u.ativo; }).length;
+    var at    = lista.filter(function(u){ return u.nivel < 50 && u.ativo; }).length;
+    document.getElementById('g-admin-count').textContent = admin;
+    document.getElementById('g-sup-count').textContent   = sup;
+    document.getElementById('g-at-count').textContent    = at;
+  }).catch(function(){});
+}
+
+// ── Modal Criar ────────────────────────────────────────────
+function abrirModalCriar(){
+  editandoId = null;
+  document.getElementById('mu-titulo').textContent = 'Novo Usuário';
+  document.getElementById('mu-btn-txt').textContent = 'Criar Usuário';
+  document.getElementById('mu-senha-label').textContent = 'Senha';
+  document.getElementById('mu-senha').placeholder = 'Mínimo 6 caracteres';
+  document.getElementById('mu-nome').value = '';
+  document.getElementById('mu-login').value = '';
+  document.getElementById('mu-senha').value = '';
+  document.getElementById('mu-nivel').value = '10';
+  atualizarInfoNivel();
+  document.getElementById('modal-usuario').classList.add('show');
+}
+
+function abrirModalEditar(id){
+  var u = usuariosLista.find(function(x){ return x.id === id; });
+  if(!u) return;
+  editandoId = id;
+  document.getElementById('mu-titulo').textContent = 'Editar Usuário';
+  document.getElementById('mu-btn-txt').textContent = 'Salvar Alterações';
+  document.getElementById('mu-senha-label').textContent = 'Nova Senha (deixe em branco para manter)';
+  document.getElementById('mu-senha').placeholder = 'Deixe em branco para não alterar';
+  document.getElementById('mu-nome').value  = u.nome || '';
+  document.getElementById('mu-login').value = u.login || '';
+  document.getElementById('mu-senha').value = '';
+  document.getElementById('mu-nivel').value = String(u.nivel || 10);
+  atualizarInfoNivel();
+  document.getElementById('modal-usuario').classList.add('show');
+}
+
+function atualizarInfoNivel(){
+  var nivel = parseInt(document.getElementById('mu-nivel').value);
+  var infos = {
+    10: '<strong>Atendente:</strong> Dashboard, chamados, consulta de clientes e TV NOC.',
+    50: '<strong>Supervisor:</strong> Tudo do Atendente + sensores PRTG, OLTs, mapa, incidentes.',
+    99: '<strong>Administrador:</strong> Acesso total incluindo gestão de usuários e permissões.',
+  };
+  document.getElementById('nivel-info').innerHTML = infos[nivel] || '';
+}
+
+function salvarUsuario(){
+  var nome  = document.getElementById('mu-nome').value.trim();
+  var login = document.getElementById('mu-login').value.trim();
+  var senha = document.getElementById('mu-senha').value;
+  var nivel = parseInt(document.getElementById('mu-nivel').value);
+  if(!nome || !login){ toast('Preencha nome e login', 'err'); return; }
+  if(!editandoId && !senha){ toast('Informe a senha', 'err'); return; }
+  if(senha && senha.length < 6){ toast('Senha mínimo 6 caracteres', 'err'); return; }
+
+  var body = {nome:nome, login:login, nivel:nivel};
+  if(senha) body.senha = senha;
+
+  var url = editandoId ? API+'/api/admin/usuarios/'+editandoId : API+'/api/admin/usuarios';
+  var method = editandoId ? 'PUT' : 'POST';
+
+  fetch(url, {method:method, headers:headers(), body:JSON.stringify(body)})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok || d.id || d.login){
+      fecharModal('modal-usuario');
+      toast(editandoId ? 'Usuário atualizado!' : 'Usuário criado!', 'ok');
+      carregarUsuarios();
+    } else {
+      toast(d.detail || 'Erro ao salvar', 'err');
+    }
+  }).catch(function(){ toast('Erro de conexão', 'err'); });
+}
+
+function toggleAtivo(id, ativo, nome){
+  var acao = ativo ? 'ativar' : 'bloquear';
+  if(!confirm(acao.charAt(0).toUpperCase()+acao.slice(1)+' o usuário '+nome+'?')) return;
+  fetch(API+'/api/admin/usuarios/'+id, {
+    method:'PUT', headers:headers(),
+    body: JSON.stringify({ativo:ativo})
+  })
+  .then(function(r){return r.json();})
+  .then(function(){
+    toast('Usuário '+(ativo?'ativado':'bloqueado')+'!', 'ok');
+    carregarUsuarios();
+  }).catch(function(){ toast('Erro', 'err'); });
+}
+
+// ── Senha ──────────────────────────────────────────────────
+var senhaUid = null;
+function abrirModalSenha(id, nome){
+  senhaUid = id;
+  document.getElementById('ms-titulo').textContent = 'Redefinir Senha — '+nome;
+  document.getElementById('ms-senha').value = '';
+  document.getElementById('ms-confirma').value = '';
+  document.getElementById('ms-err').textContent = '';
+  document.getElementById('modal-senha').classList.add('show');
+}
+function confirmarSenha(){
+  var senha = document.getElementById('ms-senha').value;
+  var conf  = document.getElementById('ms-confirma').value;
+  var err   = document.getElementById('ms-err');
+  if(senha.length < 6){ err.textContent = 'Mínimo 6 caracteres.'; return; }
+  if(senha !== conf){ err.textContent = 'As senhas não coincidem.'; return; }
+  fetch(API+'/api/admin/usuarios/'+senhaUid, {
+    method:'PUT', headers:headers(),
+    body: JSON.stringify({senha:senha})
+  })
+  .then(function(r){return r.json();})
+  .then(function(){
+    fecharModal('modal-senha');
+    toast('Senha redefinida com sucesso!', 'ok');
+  }).catch(function(){ toast('Erro ao redefinir senha', 'err'); });
+}
+
+// ── Permissões ─────────────────────────────────────────────
+var grupoAtivo = 'atendente';
+var permState  = {};
+
+var MODULOS = [
+  {grupo:'VISÃO GERAL', items:[
+    {id:'dashboard',  nome:'Dashboard',      desc:'KPIs, chamados e alertas em tempo real', min:10},
+    {id:'chamados',   nome:'Chamados',        desc:'Fila de chamados e atendimento',          min:10},
+    {id:'cliente',    nome:'Consulta Clientes',desc:'Busca de clientes e histórico IXC',      min:10},
+    {id:'tv',         nome:'TV NOC',          desc:'Painel fullscreen para monitoramento',    min:10},
+  ]},
+  {grupo:'MONITORAMENTO', items:[
+    {id:'sensores',   nome:'Sensores PRTG',   desc:'Monitor de 91 sensores em tempo real',   min:50},
+    {id:'olts',       nome:'Monitor OLTs',    desc:'21 OLTs com clientes e gráficos',         min:50},
+    {id:'mapa',       nome:'Mapa de Rede',    desc:'Mapa geográfico de OLTs e caixas FTTH',  min:50},
+  ]},
+  {grupo:'OPERAÇÕES', items:[
+    {id:'incidentes', nome:'Incidentes',      desc:'Gestão de incidentes de rede',            min:50},
+  ]},
+  {grupo:'ADMINISTRAÇÃO', items:[
+    {id:'admin',      nome:'Administração',   desc:'Usuários, grupos e permissões',           min:99},
+  ]},
+];
+
+var GRUPOS_NIVEIS = {atendente:10, supervisor:50, admin:99};
+
+function selGrupo(g, el){
+  grupoAtivo = g;
+  document.querySelectorAll('.perm-tab').forEach(function(t){ t.classList.remove('ativo'); });
+  el.classList.add('ativo');
+  renderPermissoes();
+}
+
+function renderPermissoes(){
+  var nivelAtual = GRUPOS_NIVEIS[grupoAtivo];
+  var html = '';
+  MODULOS.forEach(function(sec){
+    html += '<div class="perm-section">'+
+      '<div class="perm-sec-title">'+sec.grupo+'</div>';
+    sec.items.forEach(function(item){
+      var key = grupoAtivo+'_'+item.id;
+      // Padrão: habilitado se nível do grupo >= nível mínimo do módulo
+      var defaultOn = nivelAtual >= item.min;
+      var on = permState[key] !== undefined ? permState[key] : defaultOn;
+      var locked = item.min > nivelAtual; // Bloqueado se nível insuficiente
+      var nivelLabel = item.min <= 10 ? '<span class="pi-nivel pi-all">Todos</span>'
+        : item.min <= 50 ? '<span class="pi-nivel pi-sup">Supervisor+</span>'
+        : '<span class="pi-nivel pi-admin">Admin only</span>';
+
+      html += '<div class="perm-item">'+
+        '<div class="pi-info">'+
+          '<div class="pi-name">'+esc(item.nome)+'</div>'+
+          '<div class="pi-desc">'+esc(item.desc)+'</div>'+
+        '</div>'+
+        '<div style="display:flex;align-items:center;gap:10px;">'+
+          nivelLabel+
+          (locked
+            ? '<button class="toggle" disabled style="opacity:.3;cursor:not-allowed;" title="Nível insuficiente"></button>'
+            : '<button class="toggle '+(on?'on':'')+'" id="tog-'+key+'" onclick="togglePerm(\''+key+'\')"></button>')+
+        '</div>'+
+      '</div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('perm-content').innerHTML = html;
+}
+
+function togglePerm(key){
+  var btn = document.getElementById('tog-'+key);
+  if(!btn) return;
+  var nivelAtual = GRUPOS_NIVEIS[grupoAtivo];
+  var partes = key.split('_');
+  var modId = partes.slice(1).join('_');
+  var mod = null;
+  MODULOS.forEach(function(s){ s.items.forEach(function(i){ if(i.id===modId) mod=i; }); });
+  if(mod && mod.min > nivelAtual){ toast('Nível insuficiente para esta permissão', 'err'); return; }
+
+  var atual = permState[key];
+  if(atual === undefined){
+    var defaultOn = nivelAtual >= (mod ? mod.min : 99);
+    atual = defaultOn;
+  }
+  permState[key] = !atual;
+  btn.classList.toggle('on');
+}
+
+function salvarPermissoes(){
+  // Salva no localStorage (persistência local)
+  localStorage.setItem('noc_permissoes', JSON.stringify(permState));
+  toast('Permissões salvas!', 'ok');
+}
+
+// ── Utils ──────────────────────────────────────────────────
+function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
+
+function esc(s){
+  return (s||'').replace(/[&<>"']/g,function(c){
+    return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function toast(msg, tipo){
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show '+(tipo||'');
+  clearTimeout(window._tt);
+  window._tt = setTimeout(function(){ el.className = ''; }, 3000);
+}
+
+// ── Init ───────────────────────────────────────────────────
+carregarUsuarios();
+</script>
+</body>
+</html>

@@ -3,140 +3,294 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HubNOC — Cliquedf</title>
+<title>HubNOC · Cliquedf</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap');
-  *{margin:0;padding:0;box-sizing:border-box}
-  :root{
-    --bg:#070d14;--panel:#0d1a26;--border:#1a3a5c;
-    --green:#00ff88;--blue:#00aaff;--red:#ff3366;
-    --text:#c8dde8;--dim:#4a7a9b;
-  }
-  body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;
-       min-height:100vh;display:flex;align-items:center;justify-content:center;
-       overflow:hidden;}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+:root{
+  --bg:#0a0f1a;--surf:#0f1623;--surf2:#151e2e;--surf3:#1a2438;
+  --border:#1e2d45;--border2:#243450;
+  --text:#e2eaf4;--text2:#8ba3be;--text3:#4a6580;
+  --blue:#00aaff;--blue2:#0090dd;--green:#00e5a0;
+  --red:#ff4466;--amber:#ffb830;--purple:#a78bfa;
+  --radius:12px;--radius2:8px;
+  --font:'Inter',system-ui,sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;overflow:hidden;}
 
-  /* Grid animado de fundo */
-  .bg-grid{position:fixed;inset:0;
-    background-image:
-      linear-gradient(rgba(0,170,255,.04) 1px,transparent 1px),
-      linear-gradient(90deg,rgba(0,170,255,.04) 1px,transparent 1px);
-    background-size:40px 40px;
-    animation:gridMove 20s linear infinite;}
-  @keyframes gridMove{0%{background-position:0 0}100%{background-position:40px 40px}}
+/* Layout split */
+#login-page{display:flex;height:100vh;align-items:stretch;}
 
-  /* Pulso de radar */
-  .radar{position:fixed;top:50%;left:50%;width:800px;height:800px;
-         transform:translate(-50%,-50%);pointer-events:none;}
-  .radar-ring{position:absolute;top:50%;left:50%;border-radius:50%;border:1px solid;
-              transform:translate(-50%,-50%);animation:radarPulse 4s ease-out infinite;}
-  .radar-ring:nth-child(1){width:200px;height:200px;border-color:rgba(0,170,255,.3);animation-delay:0s}
-  .radar-ring:nth-child(2){width:400px;height:400px;border-color:rgba(0,170,255,.2);animation-delay:1s}
-  .radar-ring:nth-child(3){width:600px;height:600px;border-color:rgba(0,170,255,.1);animation-delay:2s}
-  .radar-ring:nth-child(4){width:800px;height:800px;border-color:rgba(0,170,255,.05);animation-delay:3s}
-  @keyframes radarPulse{0%{opacity:1;transform:translate(-50%,-50%) scale(.5)}
-    100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+/* ── ESQUERDA: vitrine ── */
+.lp-left{
+  flex:1.3;background:linear-gradient(135deg,#050c18 0%,#0a1628 60%,#0d1f3a 100%);
+  padding:48px 52px;display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;overflow:hidden;min-width:0;
+}
+/* Efeito de grade animada */
+.lp-left::before{
+  content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(0,170,255,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,170,255,.04) 1px,transparent 1px);
+  background-size:48px 48px;
+  animation:gridMove 25s linear infinite;pointer-events:none;
+}
+@keyframes gridMove{0%{background-position:0 0}100%{background-position:48px 48px}}
+/* Glow orb */
+.lp-left::after{
+  content:'';position:absolute;top:-100px;right:-80px;
+  width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,170,255,.1) 0%,transparent 65%);
+  pointer-events:none;
+}
+.orb-bottom{
+  position:absolute;bottom:-120px;left:-80px;width:400px;height:400px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(167,139,250,.07) 0%,transparent 65%);
+  pointer-events:none;
+}
 
-  .login-card{
-    position:relative;z-index:10;
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-top:2px solid var(--blue);
-    padding:40px;width:380px;
-    box-shadow:0 0 60px rgba(0,170,255,.1),inset 0 0 30px rgba(0,0,0,.3);
-  }
+/* Brand */
+.lp-brand{display:flex;align-items:center;gap:12px;position:relative;z-index:1;}
+.lp-brand-icon{
+  width:42px;height:42px;border-radius:11px;
+  background:linear-gradient(135deg,var(--blue),#0066cc);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 20px rgba(0,170,255,.3);
+}
+.lp-brand-icon svg{width:22px;height:22px;color:#fff;}
+.lp-brand-name{font-size:20px;font-weight:900;color:#fff;letter-spacing:-.4px;}
+.lp-brand-name span{color:var(--blue);}
 
-  .logo-area{text-align:center;margin-bottom:32px;}
-  .logo-icon{font-size:40px;display:block;margin-bottom:8px;
-    filter:drop-shadow(0 0 12px var(--blue));}
-  .logo-title{font-family:'Share Tech Mono',monospace;font-size:22px;
-    color:var(--blue);letter-spacing:4px;text-transform:uppercase;}
-  .logo-sub{font-size:11px;color:var(--dim);letter-spacing:2px;margin-top:4px;}
+/* Hero */
+.lp-hero{position:relative;z-index:1;}
+.lp-hero-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,170,255,.1);border:1px solid rgba(0,170,255,.25);
+  color:var(--blue);font-size:10px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:18px;
+}
+.lp-hero-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--blue);box-shadow:0 0 6px var(--blue);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.lp-hero-title{font-size:32px;font-weight:900;color:#fff;line-height:1.2;margin-bottom:12px;letter-spacing:-.6px;}
+.lp-hero-title span{
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.lp-hero-sub{font-size:14px;color:var(--text3);line-height:1.7;max-width:340px;}
 
-  .status-bar{display:flex;align-items:center;gap:8px;
-    background:rgba(0,255,136,.05);border:1px solid rgba(0,255,136,.2);
-    padding:8px 12px;margin-bottom:24px;font-size:12px;font-family:'Share Tech Mono',monospace;}
-  .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);
-    box-shadow:0 0 8px var(--green);animation:blink 2s infinite;}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+/* Módulos */
+.lp-modules{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative;z-index:1;}
+.lp-mod{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
+  border-radius:var(--radius);padding:16px;
+  transition:background .2s,border-color .2s,transform .2s;cursor:default;
+}
+.lp-mod:hover{background:rgba(0,170,255,.06);border-color:rgba(0,170,255,.2);transform:translateY(-1px);}
+.lp-mod-icon{font-size:20px;margin-bottom:10px;}
+.lp-mod-name{font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;}
+.lp-mod-desc{font-size:11px;color:#3a5470;line-height:1.5;}
+.lp-mod-badge{
+  display:inline-block;margin-top:7px;font-size:10px;font-weight:600;
+  padding:2px 8px;border-radius:4px;
+  background:rgba(0,229,160,.1);color:var(--green);
+}
+.lp-mod-badge.ativo-blue{background:rgba(0,170,255,.1);color:var(--blue);}
+.lp-mod-badge.novo{background:rgba(255,184,48,.1);color:var(--amber);}
 
-  label{display:block;font-size:11px;letter-spacing:2px;text-transform:uppercase;
-    color:var(--dim);margin-bottom:6px;font-family:'Share Tech Mono',monospace;}
-  .field{margin-bottom:20px;}
-  input{width:100%;background:rgba(0,170,255,.05);border:1px solid var(--border);
-    color:var(--text);padding:12px 14px;font-size:14px;font-family:'Exo 2',sans-serif;
-    outline:none;transition:.2s;}
-  input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,170,255,.1);}
+/* ── DIREITA: formulário ── */
+.lp-right{
+  width:460px;flex-shrink:0;
+  background:var(--surf);
+  padding:0 48px;
+  display:flex;flex-direction:column;justify-content:center;
+  border-left:1px solid var(--border);
+  position:relative;
+}
+.lp-right::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--blue),var(--purple));
+}
 
-  .btn-login{width:100%;padding:14px;background:transparent;
-    border:1px solid var(--blue);color:var(--blue);
-    font-family:'Share Tech Mono',monospace;font-size:14px;letter-spacing:3px;
-    text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;
-    transition:.3s;}
-  .btn-login::before{content:'';position:absolute;inset:0;background:var(--blue);
-    transform:translateX(-101%);transition:.3s;}
-  .btn-login:hover::before{transform:translateX(0)}
-  .btn-login:hover{color:var(--bg);}
-  .btn-login span{position:relative;z-index:1;}
+.lp-card{width:100%;}
+.lp-logo{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.lp-logo-icon{
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,var(--blue),#004488);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 16px rgba(0,170,255,.25);
+}
+.lp-logo-icon svg{width:20px;height:20px;color:#fff;}
+.lp-logo-text{font-size:22px;font-weight:900;letter-spacing:-.4px;}
+.lp-logo-text span{color:var(--blue);}
+.lp-sub{font-size:12px;color:var(--text3);margin-bottom:28px;padding-left:48px;letter-spacing:.5px;}
 
-  .erro{display:none;background:rgba(255,51,102,.1);border:1px solid var(--red);
-    color:var(--red);padding:10px 14px;font-size:13px;margin-top:12px;
-    font-family:'Share Tech Mono',monospace;}
+.lp-welcome{margin-bottom:22px;}
+.lp-welcome h2{font-size:18px;font-weight:800;margin-bottom:4px;}
+.lp-welcome p{font-size:12px;color:var(--text3);line-height:1.5;}
 
-  .footer-info{text-align:center;margin-top:24px;font-size:11px;
-    color:var(--dim);font-family:'Share Tech Mono',monospace;letter-spacing:1px;}
+.lp-field{margin-bottom:14px;}
+.lp-field label{display:block;font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase;}
+.lp-field input{
+  width:100%;background:var(--surf2);border:1px solid var(--border2);
+  border-radius:var(--radius2);padding:11px 14px;font-size:14px;
+  color:var(--text);outline:none;font-family:var(--font);transition:.2s;
+}
+.lp-field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,170,255,.1);}
+.lp-field input::placeholder{color:var(--text3);}
+
+.lp-btn{
+  width:100%;padding:12px;
+  background:linear-gradient(135deg,var(--blue),#0077cc);
+  color:#fff;font-size:14px;font-weight:700;
+  border:none;border-radius:var(--radius2);cursor:pointer;
+  margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:.2s;box-shadow:0 4px 16px rgba(0,170,255,.25);
+}
+.lp-btn:hover{background:linear-gradient(135deg,#0099ee,#0066bb);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,170,255,.35);}
+.lp-btn:active{transform:translateY(0);}
+
+.lp-err{
+  font-size:12px;color:var(--red);text-align:center;
+  min-height:18px;margin-top:10px;
+  background:rgba(255,68,102,.08);border:1px solid rgba(255,68,102,.2);
+  border-radius:6px;padding:8px 12px;display:none;
+}
+.lp-err.show{display:block;}
+
+.lp-footer{font-size:10px;color:var(--text3);text-align:center;margin-top:24px;letter-spacing:.3px;}
+
+.spinner{
+  display:inline-block;width:14px;height:14px;
+  border:2px solid rgba(255,255,255,.25);border-top-color:#fff;
+  border-radius:50%;animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Divisor */
+.lp-divider{display:flex;align-items:center;gap:10px;margin:18px 0;}
+.lp-divider::before,.lp-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.lp-divider span{font-size:11px;color:var(--text3);}
+
+/* Status online */
+.status-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.2);
+  border-radius:20px;padding:5px 12px;font-size:11px;color:var(--green);
+  font-weight:600;margin-bottom:20px;
+}
+.status-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s infinite;}
 </style>
 </head>
 <body>
-<div class="bg-grid"></div>
-<div class="radar">
-  <div class="radar-ring"></div><div class="radar-ring"></div>
-  <div class="radar-ring"></div><div class="radar-ring"></div>
-</div>
+<div id="login-page">
+  <!-- ESQUERDA -->
+  <div class="lp-left">
+    <div class="orb-bottom"></div>
+    <div class="lp-brand">
+      <div class="lp-brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07M8.46 8.46a5 5 0 000 7.07"/></svg>
+      </div>
+      <div class="lp-brand-name">Ia<span>Tech</span>Hub</div>
+    </div>
 
-<div class="login-card">
-  <div class="logo-area">
-    <span class="logo-icon">📡</span>
-    <div class="logo-title">HubNOC</div>
-    <div class="logo-sub">CLIQUEDF · NETWORK OPERATIONS</div>
+    <div class="lp-hero">
+      <div class="lp-hero-tag">Network Operations Center</div>
+      <div class="lp-hero-title">Sua rede sob<br><span>controle total</span></div>
+      <div class="lp-hero-sub">Monitoramento PRTG, gestão de OLTs, chamados de suporte e mapa de rede — tudo integrado ao IXC Soft em tempo real.</div>
+    </div>
+
+    <div class="lp-modules">
+      <div class="lp-mod">
+        <div class="lp-mod-icon">📡</div>
+        <div class="lp-mod-name">Monitor OLTs</div>
+        <div class="lp-mod-desc">21 OLTs com clientes online/offline e sinal das ONUs</div>
+        <div class="lp-mod-badge ativo-blue">Tempo real</div>
+      </div>
+      <div class="lp-mod">
+        <div class="lp-mod-icon">🗺️</div>
+        <div class="lp-mod-name">Mapa de Rede</div>
+        <div class="lp-mod-desc">Equipamentos e caixas FTTH no mapa geográfico</div>
+        <div class="lp-mod-badge">Ativo</div>
+      </div>
+      <div class="lp-mod">
+        <div class="lp-mod-icon">📞</div>
+        <div class="lp-mod-name">Fila de Chamados</div>
+        <div class="lp-mod-desc">Chamados de suporte com histórico do cliente no IXC</div>
+        <div class="lp-mod-badge">Ativo</div>
+      </div>
+      <div class="lp-mod">
+        <div class="lp-mod-icon">📺</div>
+        <div class="lp-mod-name">TV NOC</div>
+        <div class="lp-mod-desc">Painel fullscreen para monitoramento em tempo real</div>
+        <div class="lp-mod-badge novo">Fullscreen</div>
+      </div>
+    </div>
   </div>
 
-  <div class="status-bar">
-    <span class="status-dot"></span>
-    <span>SISTEMA OPERACIONAL</span>
-  </div>
+  <!-- DIREITA -->
+  <div class="lp-right">
+    <div class="lp-card">
+      <div class="lp-logo">
+        <div class="lp-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+        </div>
+        <div class="lp-logo-text">Hub<span>NOC</span></div>
+      </div>
+      <div class="lp-sub">CLIQUEDF · NETWORK OPERATIONS</div>
 
-  <div class="field">
-    <label>Usuário</label>
-    <input type="text" id="login" placeholder="login" autocomplete="username">
-  </div>
-  <div class="field">
-    <label>Senha</label>
-    <input type="password" id="senha" placeholder="••••••••" autocomplete="current-password">
-  </div>
+      <div class="status-pill">Sistema operacional</div>
 
-  <button class="btn-login" onclick="fazerLogin()"><span>► ACESSAR SISTEMA</span></button>
-  <div class="erro" id="erro">⚠ Login ou senha inválidos</div>
+      <div class="lp-welcome">
+        <h2>Bem-vindo de volta</h2>
+        <p>Acesso restrito a operadores e administradores autorizados.</p>
+      </div>
 
-  <div class="footer-info">IaTechHub · HubNOC v1.0</div>
+      <div class="lp-field">
+        <label>Usuário</label>
+        <input type="text" id="li-u" placeholder="seu.login" autocapitalize="none" autocomplete="username">
+      </div>
+      <div class="lp-field">
+        <label>Senha</label>
+        <input type="password" id="li-p" placeholder="••••••••••••" autocomplete="current-password">
+      </div>
+
+      <button class="lp-btn" id="lp-btn" onclick="doLogin()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Acessar Sistema
+      </button>
+      <div class="lp-err" id="li-err"></div>
+
+      <div class="lp-footer">HubNOC v1.0 · IaTechHub · Cliquedf © 2026</div>
+    </div>
+  </div>
 </div>
 
 <script>
 var API = '';
 
-document.getElementById('senha').addEventListener('keypress', function(e){
-  if(e.key === 'Enter') fazerLogin();
+document.getElementById('li-p').addEventListener('keypress', function(e){
+  if(e.key === 'Enter') doLogin();
+});
+document.getElementById('li-u').addEventListener('keypress', function(e){
+  if(e.key === 'Enter') document.getElementById('li-p').focus();
 });
 
-function fazerLogin(){
-  var login = document.getElementById('login').value.trim();
-  var senha = document.getElementById('senha').value;
-  if(!login || !senha) return;
+function doLogin(){
+  var login = document.getElementById('li-u').value.trim();
+  var senha = document.getElementById('li-p').value;
+  var err = document.getElementById('li-err');
+  var btn = document.getElementById('lp-btn');
+  err.classList.remove('show');
+  if(!login || !senha){ err.textContent = 'Preencha usuário e senha.'; err.classList.add('show'); return; }
+
+  btn.innerHTML = '<span class="spinner"></span> Autenticando...';
+  btn.disabled = true;
 
   fetch(API + '/api/auth/login', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({login:login, senha:senha})
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({login: login, senha: senha})
   })
   .then(function(r){ return r.json(); })
   .then(function(d){
@@ -146,11 +300,17 @@ function fazerLogin(){
       localStorage.setItem('noc_nivel', d.nivel);
       window.location.href = '/dashboard';
     } else {
-      document.getElementById('erro').style.display = 'block';
+      err.textContent = d.detail || 'Login ou senha inválidos.';
+      err.classList.add('show');
     }
   })
   .catch(function(){
-    document.getElementById('erro').style.display = 'block';
+    err.textContent = 'Erro de conexão. Tente novamente.';
+    err.classList.add('show');
+  })
+  .finally(function(){
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Acessar Sistema';
+    btn.disabled = false;
   });
 }
 </script>

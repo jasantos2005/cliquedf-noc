@@ -5,377 +5,506 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HubNOC TV — Cliquedf</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;700;900&display=swap');
-  *{margin:0;padding:0;box-sizing:border-box}
-  :root{
-    --bg:#04080f;--panel:#090f1a;--border:#142033;
-    --green:#00ff88;--blue:#00aaff;--red:#ff2255;
-    --yellow:#ffcc00;--orange:#ff8800;--text:#b8ccd8;--dim:#2a5070;
-  }
-  html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
-  body{font-family:'Exo 2',sans-serif;color:var(--text);
-    display:grid;grid-template-rows:auto 1fr auto;gap:0;}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#04080f;--panel:#080f1c;--panel2:#0d1628;--border:#112033;
+  --blue:#00aaff;--green:#00e5a0;--red:#ff3355;
+  --amber:#ffb830;--orange:#ff8800;--purple:#a78bfa;
+  --text:#ccdde8;--dim:#2a4a6a;
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font);}
+body{display:flex;flex-direction:column;}
 
-  /* Background animado */
-  body::before{content:'';position:fixed;inset:0;pointer-events:none;
-    background:
-      radial-gradient(ellipse 60% 40% at 20% 50%, rgba(0,170,255,.03) 0%, transparent 60%),
-      radial-gradient(ellipse 40% 60% at 80% 30%, rgba(0,255,136,.02) 0%, transparent 60%);
-    z-index:0;}
+/* Fundo animado */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 60% 40% at 15% 50%, rgba(0,170,255,.04) 0%, transparent 55%),
+  radial-gradient(ellipse 50% 60% at 85% 30%, rgba(0,229,160,.03) 0%, transparent 55%);}
 
-  /* Header */
-  .tv-header{position:relative;z-index:10;
-    display:grid;grid-template-columns:auto 1fr auto;align-items:center;
-    padding:10px 24px;background:var(--panel);
-    border-bottom:1px solid var(--border);}
-  .tv-logo{display:flex;align-items:center;gap:12px;}
-  .tv-logo-icon{font-size:28px;filter:drop-shadow(0 0 8px var(--blue));}
-  .tv-logo-text{font-family:'Share Tech Mono',monospace;font-size:20px;
-    color:var(--blue);letter-spacing:4px;}
-  .tv-logo-sub{font-size:11px;color:var(--dim);letter-spacing:2px;margin-top:2px;}
+/* ── HEADER ── */
+.hd{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;
+  padding:10px 24px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;}
+.hd-logo{display:flex;align-items:center;gap:12px;}
+.hd-icon{font-size:26px;filter:drop-shadow(0 0 8px var(--blue));}
+.hd-name{font-size:18px;font-weight:900;color:var(--blue);font-family:var(--mono);letter-spacing:2px;}
+.hd-sub{font-size:10px;color:var(--dim);letter-spacing:3px;font-family:var(--mono);margin-top:1px;}
 
-  /* KPI bar central */
-  .tv-kpis{display:flex;align-items:center;justify-content:center;gap:32px;}
-  .tv-kpi{text-align:center;}
-  .tv-kpi-val{font-size:36px;font-weight:900;line-height:1;font-family:'Share Tech Mono',monospace;}
-  .tv-kpi-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-top:2px;}
-  .kv-green{color:var(--green);text-shadow:0 0 20px rgba(0,255,136,.5);}
-  .kv-red{color:var(--red);text-shadow:0 0 20px rgba(255,34,85,.5);}
-  .kv-blue{color:var(--blue);text-shadow:0 0 20px rgba(0,170,255,.5);}
-  .kv-yellow{color:var(--yellow);}
-  .kpi-sep{width:1px;height:40px;background:var(--border);}
+/* KPI centrais */
+.hd-kpis{display:flex;align-items:center;gap:28px;}
+.hd-kpi{text-align:center;}
+.hd-kv{font-size:32px;font-weight:900;line-height:1;font-family:var(--mono);}
+.hd-kl{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-top:2px;}
+.kv-g{color:var(--green);text-shadow:0 0 18px rgba(0,229,160,.5);}
+.kv-r{color:var(--red);text-shadow:0 0 18px rgba(255,51,85,.5);}
+.kv-b{color:var(--blue);text-shadow:0 0 18px rgba(0,170,255,.5);}
+.kv-a{color:var(--amber);}
+.hd-sep{width:1px;height:36px;background:var(--border);}
 
-  .tv-time{text-align:right;font-family:'Share Tech Mono',monospace;}
-  .tv-clock{font-size:28px;color:var(--blue);}
-  .tv-date{font-size:12px;color:var(--dim);margin-top:2px;}
+.hd-right{display:flex;align-items:center;gap:16px;}
+.hd-clock{font-family:var(--mono);font-size:26px;color:var(--blue);font-weight:700;}
+.hd-date{font-size:11px;color:var(--dim);font-family:var(--mono);text-align:right;margin-top:2px;}
 
-  /* Main grid */
-  .tv-main{position:relative;z-index:1;display:grid;
-    grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;
-    padding:8px;height:100%;}
+/* ── PROGRESS BAR ── */
+.prog-wrap{position:relative;z-index:10;height:3px;background:var(--border);flex-shrink:0;}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--blue),var(--green));width:0%;transition:width .5s linear;}
 
-  .tv-panel{background:var(--panel);border:1px solid var(--border);
-    display:flex;flex-direction:column;overflow:hidden;}
-  .tv-panel-title{padding:8px 14px;border-bottom:1px solid var(--border);
-    font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:3px;
-    text-transform:uppercase;color:var(--blue);display:flex;justify-content:space-between;
-    align-items:center;flex-shrink:0;}
-  .tv-panel-body{flex:1;overflow:hidden;padding:10px;}
+/* ── SCREENS NAV ── */
+.screens-nav{position:relative;z-index:10;display:flex;align-items:center;gap:6px;
+  padding:8px 24px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;}
+.nav-dot{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--dim);transition:.2s;font-family:var(--mono);}
+.nav-dot.on{border-color:var(--blue);color:var(--blue);background:rgba(0,170,255,.08);}
+.nav-dot:hover{border-color:var(--blue);color:var(--blue);}
+.screens-nav-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.btn-pause{background:none;border:1px solid var(--border);color:var(--dim);padding:4px 12px;border-radius:5px;font-size:11px;cursor:pointer;font-family:var(--mono);}
+.btn-pause:hover{border-color:var(--amber);color:var(--amber);}
+.sync-info{font-size:10px;color:var(--dim);font-family:var(--mono);}
 
-  /* OLTs panel — span 2 rows */
-  .panel-olts{grid-row:1/3;grid-column:1;}
-  .olts-list{display:flex;flex-direction:column;gap:6px;height:100%;overflow-y:auto;}
-  .olt-row{display:flex;align-items:center;gap:10px;padding:10px 12px;
-    background:rgba(255,255,255,.02);border:1px solid var(--border);
-    transition:.3s;position:relative;overflow:hidden;}
-  .olt-row.down{border-color:var(--red);background:rgba(255,34,85,.06);}
-  .olt-row.down::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red);}
-  .olt-row.aviso{border-color:var(--yellow);background:rgba(255,204,0,.04);}
-  .olt-row.aviso::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--yellow);}
-  .olt-row.ok::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);}
-  .olt-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
-  .olt-dot.ok{background:var(--green);box-shadow:0 0 8px var(--green);}
-  .olt-dot.down{background:var(--red);box-shadow:0 0 10px var(--red);animation:pulse 1s infinite;}
-  .olt-dot.aviso{background:var(--yellow);box-shadow:0 0 8px var(--yellow);}
-  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
-  .olt-info{flex:1;min-width:0;}
-  .olt-nome{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .olt-device{font-size:11px;color:var(--dim);}
-  .olt-status-text{font-size:12px;font-family:'Share Tech Mono',monospace;font-weight:700;}
-  .olt-status-text.ok{color:var(--green);}
-  .olt-status-text.down{color:var(--red);}
-  .olt-status-text.aviso{color:var(--yellow);}
+/* ── TELA CONTAINER ── */
+.tela-wrap{flex:1;overflow:hidden;position:relative;z-index:1;}
+.tela{display:none;height:100%;animation:fadeIn .4s ease;}
+.tela.on{display:flex;flex-direction:column;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.tela-title{padding:10px 16px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--blue);font-family:var(--mono);border-bottom:1px solid var(--border);flex-shrink:0;}
+.tela-body{flex:1;padding:12px 16px;overflow-y:auto;}
+.tela-body::-webkit-scrollbar{width:3px;}
+.tela-body::-webkit-scrollbar-thumb{background:var(--border);}
 
-  /* Sensores DOWN */
-  .panel-down{grid-column:2;}
-  .down-list{display:flex;flex-direction:column;gap:6px;height:100%;overflow-y:auto;}
-  .down-row{padding:10px 12px;background:rgba(255,34,85,.06);
-    border:1px solid rgba(255,34,85,.2);border-left:3px solid var(--red);}
-  .down-nome{font-size:13px;font-weight:600;color:var(--red);}
-  .down-device{font-size:11px;color:var(--dim);margin-top:2px;}
-  .down-tempo{font-family:'Share Tech Mono',monospace;font-size:12px;
-    color:var(--red);margin-top:4px;}
-  .down-empty{text-align:center;padding:20px;color:var(--green);
-    font-family:'Share Tech Mono',monospace;font-size:14px;}
+/* ── TELA 1: OLTs ── */
+.olts-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
+.olt{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:14px;position:relative;overflow:hidden;transition:.3s;}
+.olt.down{border-color:var(--red);background:rgba(255,51,85,.05);}
+.olt.aviso{border-color:var(--amber);}
+.olt::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+.olt.down::before{background:var(--red);}
+.olt.ok::before{background:var(--green);}
+.olt.aviso::before{background:var(--amber);}
+.olt-n{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+.olt-d{font-size:11px;color:var(--dim);margin-bottom:8px;}
+.olt-s{display:flex;align-items:center;gap:6px;font-size:12px;font-family:var(--mono);}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.d-ok{background:var(--green);box-shadow:0 0 6px var(--green);}
+.d-down{background:var(--red);box-shadow:0 0 8px var(--red);animation:pulse 1s infinite;}
+.d-av{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
 
-  /* Incidentes */
-  .panel-incidentes{grid-column:3;}
-  .inc-row{padding:10px 12px;margin-bottom:6px;
-    border-left:3px solid var(--orange);background:rgba(255,136,0,.05);
-    border:1px solid rgba(255,136,0,.2);border-left:3px solid var(--orange);}
-  .inc-row.critico{border-left-color:var(--red);background:rgba(255,34,85,.06);}
-  .inc-titulo{font-size:13px;font-weight:700;}
-  .inc-meta{font-size:11px;color:var(--dim);margin-top:3px;font-family:'Share Tech Mono',monospace;}
-  .inc-empty{text-align:center;padding:20px;color:var(--green);
-    font-family:'Share Tech Mono',monospace;font-size:14px;}
+/* ── TELA 2: Alertas ── */
+.al-lista{display:flex;flex-direction:column;gap:6px;}
+.al-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:6px;border:1px solid var(--border);background:var(--panel2);}
+.al-item.down{border-color:rgba(255,51,85,.3);background:rgba(255,51,85,.05);}
+.al-item.ok{border-color:rgba(0,229,160,.2);background:rgba(0,229,160,.04);}
+.al-item.aviso{border-color:rgba(255,184,48,.2);}
+.al-icon{font-size:20px;flex-shrink:0;width:32px;text-align:center;}
+.al-info{flex:1;min-width:0;}
+.al-nome{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.al-det{font-size:11px;color:var(--dim);font-family:var(--mono);margin-top:3px;}
+.al-tempo{font-family:var(--mono);font-size:13px;color:var(--red);flex-shrink:0;}
+.al-empty{text-align:center;padding:40px;color:var(--green);font-family:var(--mono);font-size:16px;}
 
-  /* Alertas recentes */
-  .panel-alertas{grid-column:2;}
-  .alerta-row{display:flex;align-items:center;gap:10px;padding:7px 0;
-    border-bottom:1px solid var(--border);}
-  .alerta-row:last-child{border-bottom:none;}
-  .alerta-icon{font-size:16px;flex-shrink:0;}
-  .alerta-info-tv{flex:1;min-width:0;}
-  .alerta-nome-tv{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .alerta-detalhe{font-size:10px;color:var(--dim);font-family:'Share Tech Mono',monospace;}
-  .alerta-hora{font-size:11px;color:var(--dim);font-family:'Share Tech Mono',monospace;flex-shrink:0;}
+/* ── TELA 3: Clientes Bloqueados / Risco ── */
+.cli-g{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;}
+.cli-kpi{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center;position:relative;overflow:hidden;}
+.cli-kpi::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;}
+.ck-r::before{background:var(--red);}
+.ck-a::before{background:var(--amber);}
+.ck-b::before{background:var(--blue);}
+.ck-v::before{background:var(--green);}
+.cli-val{font-size:52px;font-weight:900;line-height:1;font-family:var(--mono);}
+.ck-r .cli-val{color:var(--red);text-shadow:0 0 20px rgba(255,51,85,.4);}
+.ck-a .cli-val{color:var(--amber);}
+.ck-b .cli-val{color:var(--blue);}
+.ck-v .cli-val{color:var(--green);}
+.cli-lbl{font-size:12px;color:var(--dim);margin-top:6px;letter-spacing:2px;font-family:var(--mono);}
+.cli-bar-wrap{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:16px;}
+.cli-bar-title{font-size:11px;font-weight:700;letter-spacing:3px;color:var(--blue);font-family:var(--mono);margin-bottom:14px;}
+.cli-bar-item{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.cli-bar-label{font-size:12px;min-width:160px;flex-shrink:0;}
+.cli-bar-bg{flex:1;height:22px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden;}
+.cli-bar-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:700;font-family:var(--mono);transition:width .6s ease;}
+.cli-bar-val{font-size:14px;font-weight:700;min-width:40px;text-align:right;font-family:var(--mono);}
 
-  /* Chamados abertos */
-  .panel-chamados{grid-column:3;}
-  .ch-tv-val{font-size:64px;font-weight:900;color:var(--blue);
-    text-align:center;padding:20px;font-family:'Share Tech Mono',monospace;
-    text-shadow:0 0 30px rgba(0,170,255,.4);}
-  .ch-tv-label{text-align:center;font-size:13px;color:var(--dim);
-    font-family:'Share Tech Mono',monospace;letter-spacing:2px;}
+/* ── TELA 4: Incidentes ── */
+.inc-lista{display:flex;flex-direction:column;gap:10px;}
+.inc-item{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:16px;border-left:4px solid var(--orange);}
+.inc-item.critico{border-left-color:var(--red);}
+.inc-item.medio{border-left-color:var(--amber);}
+.inc-item.baixo{border-left-color:var(--green);}
+.inc-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.inc-titulo{font-size:15px;font-weight:800;flex:1;}
+.inc-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;font-family:var(--mono);}
+.b-crit{background:rgba(255,51,85,.15);color:var(--red);}
+.b-alto{background:rgba(255,136,0,.15);color:var(--orange);}
+.b-med{background:rgba(255,184,48,.1);color:var(--amber);}
+.b-bx{background:rgba(0,229,160,.1);color:var(--green);}
+.inc-meta{font-size:12px;color:var(--dim);font-family:var(--mono);}
+.inc-empty{text-align:center;padding:40px;color:var(--green);font-family:var(--mono);font-size:16px;}
 
-  /* Ticker bottom */
-  .tv-footer{position:relative;z-index:10;
-    background:var(--panel);border-top:1px solid var(--border);
-    padding:6px 16px;display:flex;align-items:center;gap:16px;
-    font-family:'Share Tech Mono',monospace;font-size:12px;}
-  .ticker-label{color:var(--blue);letter-spacing:2px;flex-shrink:0;}
-  .ticker-track{flex:1;overflow:hidden;}
-  .ticker-inner{display:flex;gap:40px;white-space:nowrap;
-    animation:tickerScroll 30s linear infinite;}
-  .ticker-inner:hover{animation-play-state:paused;}
-  @keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-  .ticker-item{color:var(--dim);}
-  .ticker-item.alerta-ticker{color:var(--red);}
-  .ticker-item.ok-ticker{color:var(--green);}
-  .tv-sync{flex-shrink:0;font-size:10px;color:var(--dim);}
+/* ── TELA 5: Chamados ── */
+.ch-g{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.ch-kpi{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center;position:relative;}
+.ch-kpi::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;}
+.ck1::before{background:var(--blue);}
+.ck2::before{background:var(--amber);}
+.ck3::before{background:var(--green);}
+.ck4::before{background:var(--red);}
+.ch-val{font-size:48px;font-weight:900;line-height:1;font-family:var(--mono);}
+.ck1 .ch-val{color:var(--blue);}
+.ck2 .ch-val{color:var(--amber);}
+.ck3 .ch-val{color:var(--green);}
+.ck4 .ch-val{color:var(--red);}
+.ch-lbl{font-size:11px;color:var(--dim);margin-top:5px;letter-spacing:2px;font-family:var(--mono);}
+.ch-lista{display:flex;flex-direction:column;gap:6px;}
+.ch-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;}
+.ch-num{font-family:var(--mono);font-size:11px;color:var(--dim);min-width:120px;flex-shrink:0;}
+.ch-nome{font-size:13px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ch-desc{font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1;}
+.badge-sm{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:var(--mono);}
+.b-ab{background:rgba(0,170,255,.12);color:var(--blue);}
+.b-at{background:rgba(255,184,48,.12);color:var(--amber);}
+.b-cr{background:rgba(255,51,85,.15);color:var(--red);}
+
+/* ── TICKER ── */
+.ticker{position:relative;z-index:10;background:var(--panel);border-top:1px solid var(--border);padding:6px 0;flex-shrink:0;overflow:hidden;}
+.ticker-inner{display:flex;gap:0;white-space:nowrap;animation:tick 40s linear infinite;}
+.ticker-inner:hover{animation-play-state:paused;}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.t-item{padding:0 30px;font-family:var(--mono);font-size:12px;color:var(--dim);}
+.t-down{color:var(--red);}
+.t-ok{color:var(--green);}
+.t-sep{color:var(--border);padding:0 4px;}
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<div class="tv-header">
-  <div class="tv-logo">
-    <span class="tv-logo-icon">📡</span>
+<!-- HEADER -->
+<div class="hd">
+  <div class="hd-logo">
+    <span class="hd-icon">📡</span>
+    <div><div class="hd-name">HubNOC</div><div class="hd-sub">CLIQUEDF · NETWORK OPERATIONS CENTER</div></div>
+  </div>
+  <div class="hd-kpis">
+    <div class="hd-kpi"><div class="hd-kv kv-g" id="h-ok">—</div><div class="hd-kl">OK</div></div>
+    <div class="hd-sep"></div>
+    <div class="hd-kpi"><div class="hd-kv kv-r" id="h-down">—</div><div class="hd-kl">DOWN</div></div>
+    <div class="hd-sep"></div>
+    <div class="hd-kpi"><div class="hd-kv kv-a" id="h-aviso">—</div><div class="hd-kl">AVISO</div></div>
+    <div class="hd-sep"></div>
+    <div class="hd-kpi"><div class="hd-kv kv-b" id="h-ch">—</div><div class="hd-kl">CHAMADOS</div></div>
+    <div class="hd-sep"></div>
+    <div class="hd-kpi"><div class="hd-kv" style="color:var(--purple);" id="h-inc">—</div><div class="hd-kl">INCIDENTES</div></div>
+  </div>
+  <div class="hd-right">
     <div>
-      <div class="tv-logo-text">HubNOC</div>
-      <div class="tv-logo-sub">CLIQUEDF · NETWORK OPERATIONS CENTER</div>
+      <div class="hd-clock" id="clock">—</div>
+      <div class="hd-date" id="date-str">—</div>
     </div>
-  </div>
-  <div class="tv-kpis">
-    <div class="tv-kpi">
-      <div class="tv-kpi-val kv-green" id="tv-ok">—</div>
-      <div class="tv-kpi-label">OK</div>
-    </div>
-    <div class="kpi-sep"></div>
-    <div class="tv-kpi">
-      <div class="tv-kpi-val kv-red" id="tv-down">—</div>
-      <div class="tv-kpi-label">DOWN</div>
-    </div>
-    <div class="kpi-sep"></div>
-    <div class="tv-kpi">
-      <div class="tv-kpi-val kv-yellow" id="tv-aviso">—</div>
-      <div class="tv-kpi-label">AVISO</div>
-    </div>
-    <div class="kpi-sep"></div>
-    <div class="tv-kpi">
-      <div class="tv-kpi-val kv-blue" id="tv-total">—</div>
-      <div class="tv-kpi-label">SENSORES</div>
-    </div>
-  </div>
-  <div class="tv-time">
-    <div class="tv-clock" id="tv-clock">00:00:00</div>
-    <div class="tv-date" id="tv-date">—</div>
   </div>
 </div>
 
-<!-- Main -->
-<div class="tv-main">
-  <!-- OLTs (col 1, 2 rows) -->
-  <div class="tv-panel panel-olts">
-    <div class="tv-panel-title">
-      <span>📡 MONITOR OLTs</span>
-      <span id="olts-count-tv">—</span>
-    </div>
-    <div class="tv-panel-body">
-      <div class="olts-list" id="tv-olts">
-        <div style="color:var(--dim);text-align:center;padding:20px;font-family:'Share Tech Mono',monospace;">Carregando...</div>
+<!-- PROGRESS BAR -->
+<div class="prog-wrap"><div class="prog-bar" id="prog"></div></div>
+
+<!-- NAV TELAS -->
+<div class="screens-nav">
+  <div class="nav-dot on" id="nav-0" onclick="irPara(0)">📡 OLTs</div>
+  <div class="nav-dot" id="nav-1" onclick="irPara(1)">🔴 Alertas</div>
+  <div class="nav-dot" id="nav-2" onclick="irPara(2)">👥 Clientes</div>
+  <div class="nav-dot" id="nav-3" onclick="irPara(3)">⚡ Incidentes</div>
+  <div class="nav-dot" id="nav-4" onclick="irPara(4)">📞 Chamados</div>
+  <div class="screens-nav-right">
+    <span class="sync-info" id="sync-ts">—</span>
+    <button class="btn-pause" id="btn-pause" onclick="togglePause()">⏸ Pausar</button>
+  </div>
+</div>
+
+<!-- TELAS -->
+<div class="tela-wrap">
+
+  <!-- TELA 0: OLTs -->
+  <div class="tela on" id="tela-0">
+    <div class="tela-title">📡 MONITOR OLTs — Status em Tempo Real</div>
+    <div class="tela-body"><div class="olts-g" id="tv-olts">Carregando...</div></div>
+  </div>
+
+  <!-- TELA 1: Alertas -->
+  <div class="tela" id="tela-1">
+    <div class="tela-title">🔴 ALERTAS PRTG — Últimas Mudanças de Status</div>
+    <div class="tela-body"><div class="al-lista" id="tv-alertas">Carregando...</div></div>
+  </div>
+
+  <!-- TELA 2: Clientes -->
+  <div class="tela" id="tela-2">
+    <div class="tela-title">👥 CLIENTES — Situação da Base</div>
+    <div class="tela-body">
+      <div class="cli-g">
+        <div class="cli-kpi ck-r"><div class="cli-val" id="tv-bloqueados">—</div><div class="cli-lbl">BLOQUEADOS</div></div>
+        <div class="cli-kpi ck-a"><div class="cli-val" id="tv-suspensos">—</div><div class="cli-lbl">SUSPENSOS</div></div>
+        <div class="cli-kpi ck-v"><div class="cli-val" id="tv-ativos">—</div><div class="cli-lbl">ATIVOS</div></div>
+      </div>
+      <div class="cli-bar-wrap">
+        <div class="cli-bar-title">DISTRIBUIÇÃO DE STATUS</div>
+        <div id="tv-cli-bars">Carregando...</div>
       </div>
     </div>
   </div>
 
-  <!-- Sensores DOWN (col 2, row 1) -->
-  <div class="tv-panel panel-down">
-    <div class="tv-panel-title"><span>🔴 SENSORES DOWN</span></div>
-    <div class="tv-panel-body">
-      <div class="down-list" id="tv-down-list">
-        <div class="down-empty">Carregando...</div>
+  <!-- TELA 3: Incidentes -->
+  <div class="tela" id="tela-3">
+    <div class="tela-title">⚡ INCIDENTES ATIVOS</div>
+    <div class="tela-body"><div class="inc-lista" id="tv-incidentes">Carregando...</div></div>
+  </div>
+
+  <!-- TELA 4: Chamados -->
+  <div class="tela" id="tela-4">
+    <div class="tela-title">📞 FILA DE CHAMADOS — Abertos Agora</div>
+    <div class="tela-body">
+      <div class="ch-g">
+        <div class="ch-kpi ck1"><div class="ch-val" id="tv-ch-ab">—</div><div class="ch-lbl">ABERTOS</div></div>
+        <div class="ch-kpi ck2"><div class="ch-val" id="tv-ch-at">—</div><div class="ch-lbl">EM ATENDIMENTO</div></div>
+        <div class="ch-kpi ck3"><div class="ch-val" id="tv-ch-res">—</div><div class="ch-lbl">RESOLVIDOS HOJE</div></div>
+        <div class="ch-kpi ck4"><div class="ch-val" id="tv-ch-crit">—</div><div class="ch-lbl">CRÍTICOS</div></div>
       </div>
+      <div class="ch-lista" id="tv-ch-lista">Carregando...</div>
     </div>
   </div>
 
-  <!-- Incidentes (col 3, row 1) -->
-  <div class="tv-panel panel-incidentes">
-    <div class="tv-panel-title"><span>⚡ INCIDENTES ATIVOS</span></div>
-    <div class="tv-panel-body" id="tv-incidentes">
-      <div class="inc-empty">Carregando...</div>
-    </div>
-  </div>
+</div><!-- /tela-wrap -->
 
-  <!-- Alertas recentes (col 2, row 2) -->
-  <div class="tv-panel panel-alertas">
-    <div class="tv-panel-title"><span>🔔 ALERTAS RECENTES</span></div>
-    <div class="tv-panel-body">
-      <div id="tv-alertas">—</div>
-    </div>
-  </div>
-
-  <!-- Chamados abertos (col 3, row 2) -->
-  <div class="tv-panel panel-chamados">
-    <div class="tv-panel-title"><span>📞 CHAMADOS ABERTOS</span></div>
-    <div class="tv-panel-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
-      <div class="ch-tv-val" id="tv-chamados">—</div>
-      <div class="ch-tv-label">AGUARDANDO ATENDIMENTO</div>
-    </div>
-  </div>
-</div>
-
-<!-- Footer ticker -->
-<div class="tv-footer">
-  <span class="ticker-label">◄ ALERTAS</span>
-  <div class="ticker-track">
-    <div class="ticker-inner" id="ticker-inner">
-      <span class="ticker-item">Aguardando dados...</span>
-    </div>
-  </div>
-  <span class="tv-sync" id="tv-sync">—</span>
-</div>
+<!-- TICKER -->
+<div class="ticker"><div class="ticker-inner" id="ticker">
+  <span class="t-item">Aguardando dados...</span>
+</div></div>
 
 <script>
 var API = '';
-var REFRESH = 30000;
+var TELAS = 5;
+var DURACAO = 30; // segundos por tela
+var _telaAtual = 0;
+var _paused = false;
+var _progTimer = null;
+var _progVal = 0;
+var _dadosCache = {};
 
-function updateClock(){
-  var now = new Date();
-  document.getElementById('tv-clock').textContent = now.toLocaleTimeString('pt-BR');
-  document.getElementById('tv-date').textContent = now.toLocaleDateString('pt-BR',
-    {weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+// Clock
+setInterval(function(){
+  var n = new Date();
+  document.getElementById('clock').textContent = n.toLocaleTimeString('pt-BR');
+  document.getElementById('date-str').textContent = n.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'}).toUpperCase();
+}, 1000);
+document.getElementById('clock').textContent = new Date().toLocaleTimeString('pt-BR');
+
+// ── NAVEGAÇÃO ──────────────────────────────────────────────
+function irPara(idx){
+  document.querySelectorAll('.tela').forEach(function(t,i){ t.className='tela'+(i===idx?' on':''); });
+  document.querySelectorAll('.nav-dot').forEach(function(t,i){ t.className='nav-dot'+(i===idx?' on':''); });
+  _telaAtual = idx;
+  resetProg();
 }
-setInterval(updateClock, 1000);
-updateClock();
 
-function tempoDecorrido(dtStr){
-  if(!dtStr) return '—';
-  var d = new Date(dtStr.replace(' ','T'));
-  var diff = Math.floor((Date.now() - d.getTime()) / 60000);
-  if(diff < 60) return diff+'min';
-  return Math.floor(diff/60)+'h'+(diff%60)+'m';
+function togglePause(){
+  _paused = !_paused;
+  document.getElementById('btn-pause').textContent = _paused ? '▶ Retomar' : '⏸ Pausar';
+  document.getElementById('btn-pause').style.color  = _paused ? 'var(--green)' : '';
+  document.getElementById('btn-pause').style.borderColor = _paused ? 'var(--green)' : '';
 }
 
-function carregarTV(){
+function resetProg(){
+  _progVal = 0;
+  document.getElementById('prog').style.width = '0%';
+  document.getElementById('prog').style.transition = 'none';
+  setTimeout(function(){ document.getElementById('prog').style.transition = 'width .5s linear'; }, 50);
+}
+
+// Avança tela a cada segundo (progresso)
+setInterval(function(){
+  if(_paused) return;
+  _progVal++;
+  var pct = (_progVal / DURACAO) * 100;
+  document.getElementById('prog').style.width = pct+'%';
+  if(_progVal >= DURACAO){
+    _progVal = 0;
+    var prox = (_telaAtual + 1) % TELAS;
+    irPara(prox);
+  }
+}, 1000);
+
+// ── CARREGAR DADOS ──────────────────────────────────────────
+function carregarTudo(){
+  document.getElementById('sync-ts').textContent = 'sync '+new Date().toLocaleTimeString('pt-BR');
+
+  // TV estado (sensores, OLTs, incidentes, chamados)
   fetch(API+'/api/tv/estado')
   .then(function(r){return r.json();})
   .then(function(d){
+    _dadosCache = d;
     var s = d.sensores || {};
-    document.getElementById('tv-ok').textContent    = s.ok || 0;
-    document.getElementById('tv-down').textContent  = s.down || 0;
-    document.getElementById('tv-aviso').textContent = s.aviso || 0;
-    document.getElementById('tv-total').textContent = s.total || 0;
-    document.getElementById('tv-chamados').textContent = d.chamados_abertos || 0;
+    document.getElementById('h-ok').textContent    = s.ok    || 0;
+    document.getElementById('h-down').textContent  = s.down  || 0;
+    document.getElementById('h-aviso').textContent = s.aviso || 0;
+    document.getElementById('h-ch').textContent    = d.chamados_abertos || 0;
+    document.getElementById('h-inc').textContent   = (d.incidentes_ativos||[]).length;
 
-    // OLTs
-    var olts = d.olts || [];
-    document.getElementById('olts-count-tv').textContent = olts.length + ' OLTs';
-    var html = '';
-    // Ordena: DOWN primeiro
-    olts.sort(function(a,b){
-      var ord = {DOWN:0,Aviso:1,Incomum:2,OK:3,Pausado:4};
-      return (ord[a.status]||5) - (ord[b.status]||5);
-    });
-    olts.forEach(function(o){
-      var st = o.status === 'DOWN' ? 'down' : o.status === 'Aviso' ? 'aviso' : 'ok';
-      var tempo = o.status === 'DOWN' && o.down_desde ? ' · DOWN há '+tempoDecorrido(o.down_desde) : '';
-      html += '<div class="olt-row '+st+'">' +
-        '<span class="olt-dot '+st+'"></span>' +
-        '<div class="olt-info">' +
-          '<div class="olt-nome">'+o.nome+'</div>' +
-          '<div class="olt-device">'+o.device+'</div>' +
-        '</div>' +
-        '<div class="olt-status-text '+st+'">'+o.status+tempo+'</div>' +
-      '</div>';
-    });
-    document.getElementById('tv-olts').innerHTML = html || '<div style="color:var(--dim);text-align:center;padding:20px;font-family:\'Share Tech Mono\',monospace;">Nenhuma OLT no PRTG</div>';
+    renderOLTs(d.olts || []);
+    renderAlertas(d.alertas_recentes || [], d.down_list || []);
+    renderIncidentes(d.incidentes_ativos || []);
+    renderChamadosTV(d.chamados_lista || [], d.chamados_stats || {});
+    renderTicker(d.down_list || [], d.alertas_recentes || []);
+  }).catch(function(){});
 
-    // Sensores DOWN
-    var downList = d.down_list || [];
-    var downHtml = '';
-    if(downList.length){
-      downList.forEach(function(s){
-        downHtml += '<div class="down-row">' +
-          '<div class="down-nome">🔴 '+s.nome+'</div>' +
-          '<div class="down-device">'+s.device+(s.group_name?' · '+s.group_name:'')+'</div>' +
-          '<div class="down-tempo">Down há '+tempoDecorrido(s.down_desde)+'</div>' +
-        '</div>';
-      });
-    } else {
-      downHtml = '<div class="down-empty">✓ NENHUM SENSOR DOWN</div>';
-    }
-    document.getElementById('tv-down-list').innerHTML = downHtml;
-
-    // Incidentes
-    var incs = d.incidentes_ativos || [];
-    var incHtml = '';
-    if(incs.length){
-      incs.forEach(function(i){
-        var cls = i.impacto === 'critico' ? 'critico' : '';
-        incHtml += '<div class="inc-row '+cls+'">' +
-          '<div class="inc-titulo">⚡ '+i.titulo+'</div>' +
-          '<div class="inc-meta">'+i.tipo.toUpperCase()+' · '+i.impacto.toUpperCase()+' · '+tempoDecorrido(i.aberto_em)+' atrás</div>' +
-        '</div>';
-      });
-    } else {
-      incHtml = '<div class="inc-empty">✓ NENHUM INCIDENTE ATIVO</div>';
-    }
-    document.getElementById('tv-incidentes').innerHTML = incHtml;
-
-    // Alertas recentes
-    var alertas = d.alertas_recentes || [];
-    var altHtml = '';
-    alertas.slice(0,10).forEach(function(a){
-      var icon = a.status_novo === 'DOWN' ? '🔴' : a.status_novo === 'OK' ? '🟢' : '🟡';
-      altHtml += '<div class="alerta-row">' +
-        '<span class="alerta-icon">'+icon+'</span>' +
-        '<div class="alerta-info-tv">' +
-          '<div class="alerta-nome-tv">'+a.sensor_nome+'</div>' +
-          '<div class="alerta-detalhe">'+a.device+' · '+(a.status_anterior||'?')+' → '+a.status_novo+'</div>' +
-        '</div>' +
-        '<div class="alerta-hora">'+(a.ocorreu_em||'').substring(11,16)+'</div>' +
-      '</div>';
-    });
-    document.getElementById('tv-alertas').innerHTML = altHtml ||
-      '<div style="color:var(--dim);font-family:\'Share Tech Mono\',monospace;font-size:12px;padding:8px;">Nenhum alerta recente</div>';
-
-    // Ticker
-    var tickerItems = [];
-    downList.forEach(function(s){
-      tickerItems.push('🔴 DOWN: '+s.nome+' ('+s.device+') há '+tempoDecorrido(s.down_desde));
-    });
-    alertas.slice(0,5).forEach(function(a){
-      var icon = a.status_novo === 'DOWN' ? '🔴' : '🟢';
-      tickerItems.push(icon+' '+a.sensor_nome+' → '+a.status_novo);
-    });
-    if(!tickerItems.length) tickerItems = ['✓ TODOS OS SENSORES OPERACIONAIS'];
-    var tickerHtml = tickerItems.map(function(t){
-      return '<span class="ticker-item">'+ t +'</span>';
-    }).join('<span style="color:var(--border);padding:0 20px">◆</span>');
-    // Duplicar para loop
-    var inner = tickerHtml + '<span style="padding:0 40px"></span>' + tickerHtml;
-    document.getElementById('ticker-inner').innerHTML = inner;
-
-    document.getElementById('tv-sync').textContent =
-      'SYNC ' + new Date().toLocaleTimeString('pt-BR');
-  })
-  .catch(function(e){
-    document.getElementById('tv-sync').textContent = 'ERRO SYNC';
+  // Clientes IXC (endpoint separado)
+  fetch(API+'/api/tv/clientes')
+  .then(function(r){return r.json();})
+  .then(renderClientes)
+  .catch(function(){
+    // Fallback: dados genéricos
+    renderClientes({bloqueados:0, suspensos:0, ativos:0, distribuicao:[]});
   });
 }
 
-carregarTV();
-setInterval(carregarTV, REFRESH);
+function renderOLTs(l){
+  var el = document.getElementById('tv-olts');
+  if(!l||!l.length){ el.innerHTML='<div style="color:var(--dim);text-align:center;padding:40px;font-family:var(--mono)">Nenhuma OLT no PRTG</div>'; return; }
+  // Ordena: DOWN primeiro
+  l.sort(function(a,b){
+    var ord={DOWN:0,Aviso:1,Incomum:2,OK:3,Pausado:4};
+    return (ord[a.status]||5)-(ord[b.status]||5);
+  });
+  var h='';
+  l.forEach(function(o){
+    var cls=o.status==='DOWN'?'down':o.status==='Aviso'?'aviso':'ok';
+    var dc =o.status==='DOWN'?'d-down':o.status==='Aviso'?'d-av':'d-ok';
+    var tempo=o.status==='DOWN'&&o.down_desde?' · DOWN há '+fmtTempo(o.down_desde):'';
+    h+='<div class="olt '+cls+'">'+
+      '<div class="olt-n" title="'+esc(o.nome)+'">'+esc(o.nome)+'</div>'+
+      '<div class="olt-d">'+esc(o.device)+'</div>'+
+      '<div class="olt-s"><span class="dot '+dc+'"></span>'+esc(o.status)+tempo+'</div>'+
+    '</div>';
+  });
+  el.innerHTML = h;
+}
+
+function renderAlertas(alertas, downList){
+  var el = document.getElementById('tv-alertas');
+  var h = '';
+  // DOWN ativos primeiro
+  downList.forEach(function(s){
+    h+='<div class="al-item down">'+
+      '<div class="al-icon">🔴</div>'+
+      '<div class="al-info">'+
+        '<div class="al-nome">'+esc(s.nome)+'</div>'+
+        '<div class="al-det">'+esc(s.device)+(s.group_name?' · '+s.group_name:'')+'</div>'+
+      '</div>'+
+      '<div class="al-tempo">DOWN há '+fmtTempo(s.down_desde)+'</div>'+
+    '</div>';
+  });
+  // Histórico recente
+  alertas.slice(0,10).forEach(function(a){
+    var cls=a.status_novo==='DOWN'?'down':a.status_novo==='OK'?'ok':'aviso';
+    var ic =a.status_novo==='DOWN'?'🔴':a.status_novo==='OK'?'🟢':'🟡';
+    h+='<div class="al-item '+cls+'">'+
+      '<div class="al-icon">'+ic+'</div>'+
+      '<div class="al-info">'+
+        '<div class="al-nome">'+esc(a.sensor_nome)+'</div>'+
+        '<div class="al-det">'+esc(a.device)+' · '+(a.status_anterior||'?')+' → '+a.status_novo+'</div>'+
+      '</div>'+
+      '<div class="al-tempo" style="color:var(--dim);">'+(a.ocorreu_em||'').substring(11,16)+'</div>'+
+    '</div>';
+  });
+  if(!h) h = '<div class="al-empty">✓ NENHUM ALERTA ATIVO</div>';
+  el.innerHTML = h;
+}
+
+function renderClientes(d){
+  document.getElementById('tv-bloqueados').textContent = d.bloqueados || 0;
+  document.getElementById('tv-suspensos').textContent  = d.suspensos  || 0;
+  document.getElementById('tv-ativos').textContent     = d.ativos     || 0;
+
+  var dist = d.distribuicao || [
+    {label:'Ativos', val:d.ativos||0, max:d.ativos||1, cor:'var(--green)'},
+    {label:'Bloqueados', val:d.bloqueados||0, max:d.ativos||1, cor:'var(--red)'},
+    {label:'Suspensos', val:d.suspensos||0, max:d.ativos||1, cor:'var(--amber)'},
+  ];
+  var total = (d.ativos||0)+(d.bloqueados||0)+(d.suspensos||0) || 1;
+  var h = '';
+  dist.forEach(function(item){
+    var pct = Math.round((item.val/total)*100);
+    var cor = item.cor || 'var(--blue)';
+    h+='<div class="cli-bar-item">'+
+      '<div class="cli-bar-label" style="font-size:13px;">'+item.label+'</div>'+
+      '<div class="cli-bar-bg"><div class="cli-bar-fill" style="width:'+pct+'%;background:'+cor+';color:#000;">'+item.val+'</div></div>'+
+      '<div class="cli-bar-val" style="color:'+cor+';">'+pct+'%</div>'+
+    '</div>';
+  });
+  document.getElementById('tv-cli-bars').innerHTML = h;
+}
+
+function renderIncidentes(l){
+  var el = document.getElementById('tv-incidentes');
+  if(!l||!l.length){ el.innerHTML='<div class="inc-empty">✓ NENHUM INCIDENTE ATIVO</div>'; return; }
+  var h = '';
+  l.forEach(function(i){
+    var cls = i.impacto==='critico'?'critico':i.impacto==='alto'?'':i.impacto==='medio'?'medio':'baixo';
+    var badgeCls = i.impacto==='critico'?'b-crit':i.impacto==='alto'?'b-alto':i.impacto==='medio'?'b-med':'b-bx';
+    h+='<div class="inc-item '+cls+'">'+
+      '<div class="inc-head">'+
+        '<div class="inc-titulo">⚡ '+esc(i.titulo)+'</div>'+
+        '<span class="inc-badge '+badgeCls+'">'+esc((i.impacto||'').toUpperCase())+'</span>'+
+        '<span class="inc-badge" style="background:rgba(74,101,128,.12);color:var(--dim);">'+esc((i.tipo||'').toUpperCase())+'</span>'+
+      '</div>'+
+      '<div class="inc-meta">Aberto há '+fmtTempo(i.aberto_em)+' · '+i.clientes_afetados+' clientes afetados</div>'+
+    '</div>';
+  });
+  el.innerHTML = h;
+}
+
+function renderChamadosTV(lista, stats){
+  document.getElementById('tv-ch-ab').textContent   = stats.abertos       || 0;
+  document.getElementById('tv-ch-at').textContent   = stats.em_atendimento || 0;
+  document.getElementById('tv-ch-res').textContent  = stats.resolvidos_hoje || 0;
+  document.getElementById('tv-ch-crit').textContent = stats.criticos       || 0;
+
+  var el = document.getElementById('tv-ch-lista');
+  if(!lista||!lista.length){ el.innerHTML='<div style="color:var(--green);text-align:center;padding:20px;font-family:var(--mono)">✓ NENHUM CHAMADO ABERTO</div>'; return; }
+  var h='';
+  lista.slice(0,8).forEach(function(c){
+    var bCls = c.status==='em_atendimento'?'b-at':'b-ab';
+    var pCls = c.prioridade==='critica'?'b-cr':'';
+    h+='<div class="ch-item">'+
+      '<div class="ch-num">'+esc(c.numero||'—')+'</div>'+
+      '<div class="ch-nome">'+esc(c.cliente_nome||'—')+'</div>'+
+      '<div class="ch-desc">'+esc(c.descricao||'')+'</div>'+
+      '<span class="badge-sm '+bCls+'">'+esc(c.status==='em_atendimento'?'ATENDENDO':'ABERTO')+'</span>'+
+      (c.prioridade==='critica'?'<span class="badge-sm '+pCls+'">CRÍTICO</span>':'')+
+    '</div>';
+  });
+  el.innerHTML = h;
+}
+
+function renderTicker(downList, alertas){
+  var items = [];
+  downList.forEach(function(s){
+    items.push('<span class="t-item t-down">🔴 DOWN: '+esc(s.nome)+' ('+esc(s.device)+') há '+fmtTempo(s.down_desde)+'</span><span class="t-sep">◆</span>');
+  });
+  alertas.slice(0,6).forEach(function(a){
+    var ic = a.status_novo==='DOWN'?'🔴':a.status_novo==='OK'?'🟢':'🟡';
+    var cls = a.status_novo==='DOWN'?'t-down':a.status_novo==='OK'?'t-ok':'';
+    items.push('<span class="t-item '+cls+'">'+ic+' '+esc(a.sensor_nome)+' → '+esc(a.status_novo)+' às '+(a.ocorreu_em||'').substring(11,16)+'</span><span class="t-sep">◆</span>');
+  });
+  if(!items.length) items.push('<span class="t-item t-ok">✓ TODOS OS SENSORES OPERACIONAIS</span>');
+  var inner = items.join('');
+  document.getElementById('ticker').innerHTML = inner + inner; // duplicar para loop contínuo
+}
+
+function fmtTempo(dt){
+  if(!dt) return '—';
+  var d=new Date(dt.replace(' ','T'));
+  var diff=Math.floor((Date.now()-d.getTime())/60000);
+  if(diff<60) return diff+'min'; return Math.floor(diff/60)+'h'+(diff%60)+'m';
+}
+function esc(s){ return (s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+
+carregarTudo();
+setInterval(carregarTudo, 30000);
 </script>
 </body>
 </html>

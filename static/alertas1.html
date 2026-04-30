@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HubNOC — Alertas</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+:root{--bg:#0a0f1a;--surf:#0f1623;--surf2:#151e2e;--surf3:#1a2438;--border:#1e2d45;--border2:#243450;--text:#e2eaf4;--text2:#8ba3be;--text3:#4a6580;--blue:#00aaff;--green:#00e5a0;--red:#ff4466;--amber:#ffb830;--radius:10px;--radius2:7px;--font:'Inter',system-ui,sans-serif;--sw:220px;--th:52px;}
+body.light{--bg:#f0f4fa;--surf:#fff;--surf2:#e8edf5;--surf3:#dde3ef;--border:#cdd5e0;--border2:#bdc7d8;--text:#0f1623;--text2:#3a5070;--text3:#607a96;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;overflow:hidden;}
+#shell{display:flex;height:100vh;}
+/* sidebar — idêntica ao dashboard */
+#sb{width:var(--sw);background:var(--surf);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;z-index:50;transition:width .25s cubic-bezier(.4,0,.2,1);}
+#sb.col{width:52px;}
+.sb-hd{padding:0 12px;height:var(--th);display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sb-logo{display:flex;align-items:center;gap:9px;flex:1;min-width:0;}
+.sb-li{width:30px;height:30px;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,var(--blue),#0055aa);display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(0,170,255,.3);}
+.sb-li svg{width:15px;height:15px;color:#fff;}
+.sb-lt{font-size:15px;font-weight:900;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;}
+.sb-lt span{color:var(--blue);}
+.sb-tog{background:none;border:none;color:var(--text3);cursor:pointer;padding:5px;border-radius:5px;display:flex;flex-shrink:0;}
+.sb-tog:hover{background:var(--surf2);color:var(--text);}
+.sb-nav{flex:1;overflow-y:auto;padding:8px 6px;}
+.sb-nav::-webkit-scrollbar{display:none;}
+.sb-g{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:10px 8px 4px;white-space:nowrap;overflow:hidden;}
+#sb.col .sb-g{display:none;}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:var(--radius2);cursor:pointer;color:var(--text2);transition:all .15s;position:relative;white-space:nowrap;overflow:hidden;user-select:none;text-decoration:none;}
+.ni:hover{background:var(--surf2);color:var(--text);}
+.ni.on{background:rgba(0,170,255,.1);color:var(--blue);}
+.ni.on::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:2px;background:var(--blue);border-radius:0 2px 2px 0;}
+.ni svg{width:16px;height:16px;flex-shrink:0;}
+.ni-l{font-size:13px;font-weight:500;}
+#sb.col .ni-l{display:none;}
+#sb.col .ni{justify-content:center;padding:9px;}
+.sb-ft{padding:10px 6px;border-top:1px solid var(--border);}
+.sb-u{display:flex;align-items:center;gap:9px;padding:8px;border-radius:var(--radius2);}
+.sb-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--blue),var(--blue)88);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;}
+.sb-ui{min-width:0;flex:1;}
+.sb-un{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-ug{font-size:10px;color:var(--text3);display:flex;align-items:center;gap:4px;margin-top:1px;}
+.sb-ug::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0;}
+#sb.col .sb-ui{display:none;}
+.btn-sair{width:100%;display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;background:rgba(255,68,102,.06);border:1px solid rgba(255,68,102,.15);color:var(--red);cursor:pointer;font-size:12px;font-weight:600;margin-bottom:6px;transition:.15s;}
+.btn-sair:hover{background:rgba(255,68,102,.12);}
+#sb.col .btn-sair span{display:none;}
+#sb.col .btn-sair{justify-content:center;padding:9px;}
+/* main */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+#tb{height:var(--th);background:var(--surf);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;position:relative;}
+#tb::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--blue)40,transparent);}
+.tb-title{font-size:14px;font-weight:700;flex:1;}
+.tb-right{display:flex;align-items:center;gap:10px;margin-left:auto;}
+.clock{font-family:monospace;font-size:13px;color:var(--blue);font-weight:700;}
+.btn-tv{display:flex;align-items:center;gap:6px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);color:#a78bfa;padding:6px 14px;border-radius:var(--radius2);font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;transition:.15s;}
+.btn-tv:hover{background:rgba(167,139,250,.2);}
+.btn-th{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surf2);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;}
+#content{flex:1;overflow-y:auto;padding:20px 24px;}
+#content::-webkit-scrollbar{width:4px;}
+#content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+/* filtros */
+.filtros{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.ftab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surf2);color:var(--text3);transition:.15s;}
+.ftab.on{background:var(--blue);color:#000;border-color:var(--blue);}
+.ftab.on-down{background:var(--red);color:#fff;border-color:var(--red);}
+.ftab.on-ok{background:var(--green);color:#000;border-color:var(--green);}
+.ftab.on-aviso{background:var(--amber);color:#000;border-color:var(--amber);}
+.f-busca{background:var(--surf2);border:1px solid var(--border);border-radius:var(--radius2);padding:6px 12px;font-size:12px;color:var(--text);outline:none;width:200px;}
+.f-busca:focus{border-color:var(--blue);}
+/* stats row */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.stat{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative;overflow:hidden;}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.stat.all::before{background:var(--blue);}
+.stat.down-s::before{background:var(--red);}
+.stat.ok-s::before{background:var(--green);}
+.stat.av-s::before{background:var(--amber);}
+.stat-val{font-size:28px;font-weight:900;line-height:1;}
+.stat.all .stat-val{color:var(--blue);}
+.stat.down-s .stat-val{color:var(--red);}
+.stat.ok-s .stat-val{color:var(--green);}
+.stat.av-s .stat-val{color:var(--amber);}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:3px;}
+/* tabela */
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);}
+.card-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);}
+.card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);}
+table{width:100%;border-collapse:collapse;}
+thead th{text-align:left;padding:10px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:2px solid var(--border);}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr{cursor:pointer;transition:.12s;}
+tbody tr:hover td{background:rgba(0,170,255,.04);}
+tbody tr.down-row td{background:rgba(255,68,102,.02);}
+tbody tr.down-row:hover td{background:rgba(255,68,102,.06);}
+.badge{display:inline-block;padding:2px 8px;font-size:10px;font-weight:700;border-radius:20px;white-space:nowrap;}
+.b-down{background:rgba(255,68,102,.1);color:var(--red);}
+.b-ok{background:rgba(0,229,160,.1);color:var(--green);}
+.b-aviso{background:rgba(255,184,48,.1);color:var(--amber);}
+.b-inc{background:rgba(74,101,128,.1);color:var(--text3);}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;}
+.dot-down{background:var(--red);box-shadow:0 0 6px var(--red);animation:blink 1.5s infinite;}
+.dot-ok{background:var(--green);}
+.dot-av{background:var(--amber);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.empty{text-align:center;padding:32px;color:var(--text3);}
+/* modal detalhe */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.ov.show{display:flex;}
+.modal{background:var(--surf);border:1px solid var(--border);border-radius:var(--radius);width:560px;max-width:95vw;max-height:85vh;overflow-y:auto;}
+.modal::before{content:'';display:block;height:2px;border-radius:var(--radius) var(--radius) 0 0;}
+.modal.m-down::before{background:var(--red);}
+.modal.m-ok::before{background:var(--green);}
+.modal.m-aviso::before{background:var(--amber);}
+.mhd{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);font-weight:800;font-size:16px;}
+.mbd{padding:20px;}
+.mft{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+.bx{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;}
+.info-box{background:var(--surf2);border-radius:8px;padding:14px;margin-bottom:12px;}
+.info-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.info-row:last-child{border-bottom:none;}
+.ik{color:var(--text3);}
+.iv{font-weight:500;}
+.alerta-status{border-radius:8px;padding:12px 16px;font-size:13px;font-weight:600;margin-bottom:12px;}
+.a-down-box{background:rgba(255,68,102,.08);border:1px solid rgba(255,68,102,.25);color:var(--red);}
+.a-ok-box{background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.25);color:var(--green);}
+.a-aviso-box{background:rgba(255,184,48,.08);border:1px solid rgba(255,184,48,.25);color:var(--amber);}
+.btn-s{background:var(--surf2);border:1px solid var(--border);color:var(--text2);padding:9px 16px;border-radius:var(--radius2);font-size:13px;cursor:pointer;}
+.btn-p{background:linear-gradient(135deg,var(--blue),#0077cc);border:none;color:#fff;padding:9px 18px;border-radius:var(--radius2);font-size:13px;font-weight:700;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="shell">
+
+<!-- SIDEBAR -->
+<div id="sb">
+  <div class="sb-hd">
+    <div class="sb-logo">
+      <div class="sb-li"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg></div>
+      <div class="sb-lt">Hub<span>NOC</span></div>
+    </div>
+    <button class="sb-tog" onclick="toggleSB()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-g">VISÃO GERAL</div>
+    <a class="ni" href="/dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="ni-l">Dashboard</span></a>
+    <div class="sb-g">ATENDIMENTO</div>
+    <a class="ni" href="/chamados"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 11 19.79 19.79 0 01.22 2.18 2 2 0 012.18 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.06 6.06l1.27-.53a2 2 0 012.11.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg><span class="ni-l">Chamados</span></a>
+    <a class="ni" href="/incidentes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span class="ni-l">Incidentes</span></a>
+    <a class="ni on" href="/alertas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="ni-l">Alertas</span></a>
+    <a class="ni" href="/cliente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="ni-l">Clientes</span></a>
+    <div class="sb-g">MONITORAMENTO</div>
+    <a class="ni" href="/sensores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span class="ni-l">Sensores PRTG</span></a>
+    <a class="ni" href="/olts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07M8.46 8.46a5 5 0 000 7.07"/></svg><span class="ni-l">Monitor OLTs</span></a>
+    <a class="ni" href="/mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg><span class="ni-l">Mapa de Rede</span></a>
+    <div class="sb-g">SISTEMA</div>
+    <a class="ni" href="/admin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg><span class="ni-l">Administração</span></a>
+  </nav>
+  <div class="sb-ft">
+    <button class="btn-sair" onclick="sair()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Sair</span></button>
+    <div class="sb-u">
+      <div class="sb-av" id="sb-av">A</div>
+      <div class="sb-ui"><div class="sb-un" id="sb-nome">—</div><div class="sb-ug">Online</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="tb">
+    <div class="tb-title">Alertas PRTG</div>
+    <div class="tb-right">
+      <div class="clock" id="clock">—</div>
+      <a class="btn-tv" href="/tv" target="_blank">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>TV NOC
+      </a>
+      <button class="btn-th" id="btn-th" onclick="toggleTheme()">☀️</button>
+    </div>
+  </div>
+
+  <div id="content">
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat all"><div class="stat-val" id="st-total">—</div><div class="stat-lbl">Total alertas</div></div>
+      <div class="stat down-s"><div class="stat-val" id="st-down">—</div><div class="stat-lbl">🔴 DOWN</div></div>
+      <div class="stat ok-s"><div class="stat-val" id="st-ok">—</div><div class="stat-lbl">🟢 Recuperados</div></div>
+      <div class="stat av-s"><div class="stat-val" id="st-aviso">—</div><div class="stat-lbl">🟡 Avisos</div></div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros">
+      <div class="ftab on" id="ftab-todos" onclick="filtrar('todos',this)">Todos</div>
+      <div class="ftab" id="ftab-down" onclick="filtrar('DOWN',this)">🔴 DOWN</div>
+      <div class="ftab" id="ftab-ok" onclick="filtrar('OK',this)">🟢 Recuperados</div>
+      <div class="ftab" id="ftab-aviso" onclick="filtrar('Aviso',this)">🟡 Avisos</div>
+      <div class="ftab" id="ftab-incomum" onclick="filtrar('Incomum',this)">🟠 Incomum</div>
+      <input class="f-busca" type="text" id="busca" placeholder="🔍 Filtrar por nome ou device..." oninput="filtrarBusca()">
+      <span id="al-cnt" style="font-size:11px;color:var(--text3);margin-left:4px;">—</span>
+    </div>
+
+    <!-- Tabela -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title">HISTÓRICO DE ALERTAS — Clique em qualquer linha para ver detalhes</span>
+        <button onclick="carregarAlertas()" style="background:none;border:1px solid var(--border);color:var(--text3);padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer;">↻ Atualizar</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:12px;"></th>
+              <th>Sensor</th>
+              <th>Device / Grupo</th>
+              <th>Status Anterior</th>
+              <th>Novo Status</th>
+              <th>Down há / Duração</th>
+              <th>Ocorreu em</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-al">
+            <tr><td colspan="7" class="empty">Carregando alertas...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- Modal Detalhe -->
+<div class="ov" id="modal-al">
+  <div class="modal" id="modal-al-inner">
+    <div class="mhd"><span id="mal-titulo">—</span><button class="bx" onclick="fecharAl()">×</button></div>
+    <div class="mbd">
+      <div class="alerta-status" id="mal-status-box"></div>
+      <div class="info-box" id="mal-info"></div>
+      <div id="mal-acao"></div>
+    </div>
+    <div class="mft">
+      <button class="btn-s" onclick="fecharAl()">Fechar</button>
+      <button class="btn-p" onclick="abrirChamadoDoAlerta()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px;"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07"/><polyline points="16 17 21 12 16 7"/></svg>
+        Abrir Chamado
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+var API = '';
+var token = localStorage.getItem('noc_token');
+if(!token){ window.location.href = '/login'; }
+var _nome = localStorage.getItem('noc_nome') || '—';
+document.getElementById('sb-nome').textContent = _nome;
+document.getElementById('sb-av').textContent = _nome.charAt(0).toUpperCase();
+setInterval(function(){ document.getElementById('clock').textContent = new Date().toLocaleTimeString('pt-BR'); }, 1000);
+document.getElementById('clock').textContent = new Date().toLocaleTimeString('pt-BR');
+function toggleSB(){ document.getElementById('sb').classList.toggle('col'); }
+function sair(){ localStorage.clear(); window.location.href = '/login'; }
+function headers(){ return {'Content-Type':'application/json','Authorization':'Bearer '+token}; }
+function esc(s){ return (s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+(function(){ var t=localStorage.getItem('noc_theme'); if(t==='light'){document.body.classList.add('light');document.getElementById('btn-th').textContent='🌙';} })();
+function toggleTheme(){ document.body.classList.toggle('light'); var l=document.body.classList.contains('light'); document.getElementById('btn-th').textContent=l?'🌙':'☀️'; localStorage.setItem('noc_theme',l?'light':'dark'); }
+
+var _alertas = [];
+var _filtroStatus = 'todos';
+var _busca = '';
+var _alertaSel = null;
+
+function carregarAlertas(){
+  fetch(API+'/api/sensores/alertas?limite=500', {headers:headers()})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    _alertas = Array.isArray(d) ? d : (d.alertas || d || []);
+    calcStats();
+    renderTabela();
+  }).catch(function(){
+    document.getElementById('tbody-al').innerHTML='<tr><td colspan="7" class="empty">Erro ao carregar alertas</td></tr>';
+  });
+}
+
+function calcStats(){
+  var total=_alertas.length;
+  var down=_alertas.filter(function(a){return a.status_novo==='DOWN';}).length;
+  var ok=_alertas.filter(function(a){return a.status_novo==='OK';}).length;
+  var av=_alertas.filter(function(a){return a.status_novo==='Aviso'||a.status_novo==='Incomum';}).length;
+  document.getElementById('st-total').textContent=total;
+  document.getElementById('st-down').textContent=down;
+  document.getElementById('st-ok').textContent=ok;
+  document.getElementById('st-aviso').textContent=av;
+}
+
+function filtrar(status, el){
+  _filtroStatus = status;
+  document.querySelectorAll('.ftab').forEach(function(t){t.className='ftab';});
+  el.className = 'ftab on';
+  renderTabela();
+}
+
+function filtrarBusca(){
+  _busca = document.getElementById('busca').value.toLowerCase();
+  renderTabela();
+}
+
+function renderTabela(){
+  var lista = _alertas.filter(function(a){
+    if(_filtroStatus!=='todos' && a.status_novo!==_filtroStatus) return false;
+    if(_busca){
+      var haystack = ((a.sensor_nome||'')+(a.device||'')).toLowerCase();
+      if(haystack.indexOf(_busca)<0) return false;
+    }
+    return true;
+  });
+  document.getElementById('al-cnt').textContent = lista.length+' alertas';
+  if(!lista.length){ document.getElementById('tbody-al').innerHTML='<tr><td colspan="7" class="empty">Nenhum alerta encontrado</td></tr>'; return; }
+
+  var h='';
+  lista.forEach(function(a,i){
+    var isDown = a.status_novo==='DOWN';
+    var isOk   = a.status_novo==='OK';
+    var rowCls = isDown ? 'down-row' : '';
+    var dot    = isDown?'dot-down':isOk?'dot-ok':'dot-av';
+    var badgeN = isDown?'b-down':isOk?'b-ok':'b-aviso';
+    var badgeA = (a.status_anterior==='DOWN')?'b-down':(a.status_anterior==='OK'?'b-ok':'b-aviso');
+    var ic     = isDown?'🔴':isOk?'🟢':'🟡';
+    var duracao = '—';
+    if(a.duracao_down_min) duracao = a.duracao_down_min+'min';
+    else if(isDown && a.ocorreu_em){
+      var diff=Math.floor((Date.now()-new Date(a.ocorreu_em.replace(' ','T')).getTime())/60000);
+      duracao = diff<60?diff+'min':Math.floor(diff/60)+'h'+(diff%60)+'m';
+    }
+    h+='<tr class="'+rowCls+'" onclick="abrirDetalhe('+i+')">'+
+      '<td><span class="dot '+dot+'"></span></td>'+
+      '<td style="font-weight:600;">'+esc(a.sensor_nome||'—')+'</td>'+
+      '<td><div style="font-size:12px;">'+esc(a.device||'—')+'</div><div style="font-size:10px;color:var(--text3);">'+esc(a.group_name||'')+'</div></td>'+
+      '<td><span class="badge '+badgeA+'">'+esc(a.status_anterior||'—')+'</span></td>'+
+      '<td><span class="badge '+badgeN+'">'+ic+' '+esc(a.status_novo||'—')+'</span></td>'+
+      '<td style="font-family:monospace;font-size:11px;color:'+(isDown?'var(--red)':'var(--text3)')+';">'+duracao+'</td>'+
+      '<td style="font-family:monospace;font-size:11px;color:var(--text3);">'+(a.ocorreu_em||'—').substring(0,16)+'</td>'+
+    '</tr>';
+  });
+  document.getElementById('tbody-al').innerHTML = h;
+  // Guarda referência filtrada para uso no modal
+  window._listaFiltrada = lista;
+}
+
+function abrirDetalhe(idx){
+  var lista = window._listaFiltrada || _alertas;
+  var a = lista[idx];
+  if(!a) return;
+  _alertaSel = a;
+
+  var isDown = a.status_novo==='DOWN';
+  var isOk   = a.status_novo==='OK';
+
+  // Estilo do modal conforme status
+  var modal = document.getElementById('modal-al-inner');
+  modal.className = 'modal '+(isDown?'m-down':isOk?'m-ok':'m-aviso');
+
+  document.getElementById('mal-titulo').textContent = (isDown?'🔴 ':isOk?'🟢 ':'🟡 ')+esc(a.sensor_nome||'—');
+
+  // Box de status
+  var boxCls = isDown?'a-down-box':isOk?'a-ok-box':'a-aviso-box';
+  var boxMsg = isDown
+    ? '⚠️ Sensor entrou em estado DOWN. Verifique o equipamento imediatamente no PRTG.'
+    : isOk
+    ? '✓ Sensor recuperou. Voltou ao estado normal (OK).'
+    : '⚡ Sensor em estado de aviso. Monitorar para evitar queda.';
+  document.getElementById('mal-status-box').className = 'alerta-status '+boxCls;
+  document.getElementById('mal-status-box').textContent = boxMsg;
+
+  // Duração
+  var duracao = '—';
+  if(a.duracao_down_min) duracao = a.duracao_down_min+' min';
+  else if(isDown && a.ocorreu_em){
+    var diff=Math.floor((Date.now()-new Date(a.ocorreu_em.replace(' ','T')).getTime())/60000);
+    duracao = diff<60?diff+' min':Math.floor(diff/60)+'h '+(diff%60)+'min';
+  }
+
+  document.getElementById('mal-info').innerHTML =
+    '<div class="info-row"><span class="ik">Sensor</span><span class="iv">'+esc(a.sensor_nome||'—')+'</span></div>'+
+    '<div class="info-row"><span class="ik">Device</span><span class="iv">'+esc(a.device||'—')+'</span></div>'+
+    '<div class="info-row"><span class="ik">Grupo PRTG</span><span class="iv">'+esc(a.group_name||'—')+'</span></div>'+
+    '<div class="info-row"><span class="ik">Transição</span><span class="iv">'+esc(a.status_anterior||'?')+' → '+esc(a.status_novo)+'</span></div>'+
+    '<div class="info-row"><span class="ik">Down há / Duração</span><span class="iv" style="color:'+(isDown?'var(--red)':'var(--text3)')+';">'+duracao+'</span></div>'+
+    '<div class="info-row"><span class="ik">Ocorreu em</span><span class="iv">'+esc(a.ocorreu_em||'—')+'</span></div>';
+
+  document.getElementById('mal-acao').innerHTML = isDown
+    ? '<div style="background:rgba(255,68,102,.06);border:1px solid rgba(255,68,102,.2);border-radius:8px;padding:12px;font-size:12px;color:var(--text2);">'+
+      '<strong style="color:var(--red);">Ações recomendadas:</strong><br>'+
+      '1. Verificar o sensor no PRTG → Grupos → '+esc(a.group_name||'—')+'<br>'+
+      '2. Abrir chamado de incidente se o impacto for massivo<br>'+
+      '3. Notificar equipe de campo se necessário</div>'
+    : '';
+
+  document.getElementById('modal-al').classList.add('show');
+}
+
+function fecharAl(){ document.getElementById('modal-al').classList.remove('show'); }
+
+function abrirChamadoDoAlerta(){
+  if(!_alertaSel) return;
+  fecharAl();
+  var desc = 'Sensor DOWN: '+(_alertaSel.sensor_nome||'—')+' / Device: '+(_alertaSel.device||'—')+' — ocorreu às '+(_alertaSel.ocorreu_em||'—').substring(11,16);
+  // Redireciona para chamados com contexto via localStorage
+  localStorage.setItem('noc_novo_chamado_desc', desc);
+  window.location.href = '/chamados?novo=1';
+}
+
+carregarAlertas();
+setInterval(carregarAlertas, 60000); // Atualiza a cada 1 min
+</script>
+</body>
+</html>

@@ -69,6 +69,9 @@ async def cliente_page(): return html('cliente.html')
 @app.get('/tv',        response_class=HTMLResponse)
 async def tv_page():    return html('tv.html')
 
+@app.get('/alertas', response_class=HTMLResponse)
+async def alertas_page(): return html('alertas.html')
+
 @app.get('/admin',     response_class=HTMLResponse)
 async def admin_page(): return html('admin.html')
 

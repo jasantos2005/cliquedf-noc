@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HubNOC — Sensores</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#070d14;--panel:#0d1a26;--border:#1a3a5c;--green:#00ff88;--blue:#00aaff;--red:#ff3366;--yellow:#ffcc00;--orange:#ff8800;--text:#c8dde8;--dim:#4a7a9b;}
+  body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;min-height:100vh;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--blue);letter-spacing:3px;}
+  .nav-links{display:flex;gap:4px;}
+  .nav-link{padding:6px 14px;font-size:12px;letter-spacing:1px;text-decoration:none;color:var(--dim);border:1px solid transparent;transition:.2s;cursor:pointer;font-family:'Share Tech Mono',monospace;}
+  .nav-link:hover,.nav-link.ativo{color:var(--blue);border-color:var(--border);}
+  .topbar-right{display:flex;align-items:center;gap:16px;}
+  .user-info{font-size:12px;color:var(--dim);font-family:'Share Tech Mono',monospace;}
+  .btn-sair{background:none;border:1px solid var(--border);color:var(--dim);padding:5px 12px;font-size:11px;cursor:pointer;letter-spacing:1px;}
+  .btn-sair:hover{border-color:var(--red);color:var(--red);}
+  .main{padding:20px 24px;}
+  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .page-title{font-family:'Share Tech Mono',monospace;font-size:16px;letter-spacing:3px;color:var(--blue);}
+
+  /* KPI bar */
+  .kpi-bar{display:flex;gap:12px;margin-bottom:20px;}
+  .kpi-mini{background:var(--panel);border:1px solid var(--border);padding:14px 20px;
+    display:flex;align-items:center;gap:12px;cursor:pointer;transition:.2s;flex:1;}
+  .kpi-mini:hover,.kpi-mini.ativo{border-color:var(--blue);}
+  .kpi-mini.ativo-green{border-color:var(--green);}
+  .kpi-mini.ativo-red{border-color:var(--red);}
+  .kpi-mini.ativo-yellow{border-color:var(--yellow);}
+  .kpi-mini.ativo-orange{border-color:var(--orange);}
+  .kpi-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+  .dot-ok{background:var(--green);box-shadow:0 0 8px var(--green);}
+  .dot-down{background:var(--red);box-shadow:0 0 8px var(--red);animation:blink 1.5s infinite;}
+  .dot-aviso{background:var(--yellow);box-shadow:0 0 8px var(--yellow);}
+  .dot-incomum{background:var(--orange);}
+  .dot-pausado{background:var(--dim);}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+  .kpi-mini-val{font-size:28px;font-weight:700;font-family:'Share Tech Mono',monospace;}
+  .kpi-mini-label{font-size:11px;color:var(--dim);letter-spacing:1px;}
+  .val-green{color:var(--green);}
+  .val-red{color:var(--red);}
+  .val-yellow{color:var(--yellow);}
+  .val-orange{color:var(--orange);}
+  .val-dim{color:var(--dim);}
+
+  /* Filtros */
+  .filtros{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .busca-input{background:rgba(0,170,255,.05);border:1px solid var(--border);
+    color:var(--text);padding:8px 14px;font-size:13px;font-family:'Exo 2',sans-serif;
+    outline:none;width:260px;}
+  .busca-input:focus{border-color:var(--blue);}
+  .btn-sync{background:none;border:1px solid var(--border);color:var(--dim);
+    padding:7px 14px;font-size:11px;cursor:pointer;letter-spacing:1px;
+    font-family:'Share Tech Mono',monospace;}
+  .btn-sync:hover{border-color:var(--blue);color:var(--blue);}
+
+  /* Grid de sensores */
+  .sensores-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;}
+  .sensor-card{background:var(--panel);border:1px solid var(--border);padding:14px;
+    position:relative;transition:.2s;}
+  .sensor-card:hover{border-color:rgba(0,170,255,.4);}
+  .sensor-card.down{border-color:var(--red);background:rgba(255,51,102,.05);}
+  .sensor-card.down::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--red);}
+  .sensor-card.aviso{border-color:var(--yellow);}
+  .sensor-card.aviso::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--yellow);}
+  .sensor-card.incomum{border-color:var(--orange);}
+  .sensor-card.incomum::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--orange);}
+  .sensor-card.ok::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--green);}
+  .sc-header{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .sc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+  .sc-nome{font-size:13px;font-weight:600;line-height:1.3;flex:1;}
+  .sc-device{font-size:11px;color:var(--dim);margin-bottom:6px;}
+  .sc-footer{display:flex;align-items:center;justify-content:space-between;}
+  .sc-valor{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--blue);}
+  .sc-tempo{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--red);}
+  .badge-status{display:inline-block;padding:2px 8px;font-size:10px;letter-spacing:1px;
+    font-family:'Share Tech Mono',monospace;border-radius:2px;}
+  .bs-ok{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.3);}
+  .bs-down{background:rgba(255,51,102,.15);color:var(--red);border:1px solid rgba(255,51,102,.3);}
+  .bs-aviso{background:rgba(255,204,0,.1);color:var(--yellow);border:1px solid rgba(255,204,0,.3);}
+  .bs-incomum{background:rgba(255,136,0,.1);color:var(--orange);border:1px solid rgba(255,136,0,.3);}
+  .bs-pausado{background:rgba(74,122,155,.1);color:var(--dim);border:1px solid rgba(74,122,155,.3);}
+
+  .empty{text-align:center;padding:48px;color:var(--dim);font-family:'Share Tech Mono',monospace;grid-column:1/-1;}
+  .sync-info{font-size:11px;color:var(--dim);font-family:'Share Tech Mono',monospace;margin-left:auto;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="logo">📡 HubNOC</div>
+    <div class="nav-links">
+      <a class="nav-link" href="/dashboard">Dashboard</a>
+      <a class="nav-link" href="/chamados">Chamados</a>
+      <a class="nav-link ativo" href="/sensores">Sensores</a>
+      <a class="nav-link" href="/incidentes">Incidentes</a>
+      <a class="nav-link" href="/cliente">Clientes</a>
+      <a class="nav-link" href="/tv" target="_blank">📺 TV</a>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="user-info" id="user-nome">—</div>
+    <button class="btn-sair" onclick="sair()">SAIR</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <div class="page-title">MONITOR DE SENSORES PRTG</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="sync-info" id="sync-info">—</span>
+      <button class="btn-sync" onclick="carregar()">↺ SYNC</button>
+    </div>
+  </div>
+
+  <!-- KPIs clicáveis -->
+  <div class="kpi-bar">
+    <div class="kpi-mini" onclick="filtrarStatus('', this)" id="kpi-todos">
+      <span class="kpi-dot" style="background:var(--blue)"></span>
+      <div><div class="kpi-mini-val" id="kv-total" style="color:var(--blue)">—</div><div class="kpi-mini-label">TOTAL</div></div>
+    </div>
+    <div class="kpi-mini" onclick="filtrarStatus('OK', this)">
+      <span class="kpi-dot dot-ok"></span>
+      <div><div class="kpi-mini-val val-green" id="kv-ok">—</div><div class="kpi-mini-label">OK</div></div>
+    </div>
+    <div class="kpi-mini" onclick="filtrarStatus('DOWN', this)">
+      <span class="kpi-dot dot-down"></span>
+      <div><div class="kpi-mini-val val-red" id="kv-down">—</div><div class="kpi-mini-label">DOWN</div></div>
+    </div>
+    <div class="kpi-mini" onclick="filtrarStatus('Aviso', this)">
+      <span class="kpi-dot dot-aviso"></span>
+      <div><div class="kpi-mini-val val-yellow" id="kv-aviso">—</div><div class="kpi-mini-label">AVISO</div></div>
+    </div>
+    <div class="kpi-mini" onclick="filtrarStatus('Incomum', this)">
+      <span class="kpi-dot dot-incomum"></span>
+      <div><div class="kpi-mini-val val-orange" id="kv-incomum">—</div><div class="kpi-mini-label">INCOMUM</div></div>
+    </div>
+    <div class="kpi-mini" onclick="filtrarStatus('Pausado', this)">
+      <span class="kpi-dot dot-pausado"></span>
+      <div><div class="kpi-mini-val val-dim" id="kv-pausado">—</div><div class="kpi-mini-label">PAUSADO</div></div>
+    </div>
+  </div>
+
+  <!-- Filtro busca -->
+  <div class="filtros">
+    <input class="busca-input" type="text" id="busca" placeholder="Buscar sensor ou device..." oninput="renderFiltrado()">
+  </div>
+
+  <!-- Grid -->
+  <div class="sensores-grid" id="sensores-grid">
+    <div class="empty">Carregando sensores...</div>
+  </div>
+</div>
+
+<script>
+var API = '';
+var token = localStorage.getItem('noc_token');
+if(!token){ window.location.href = '/login'; }
+document.getElementById('user-nome').textContent = localStorage.getItem('noc_nome') || '—';
+
+var todosSensores = [];
+var filtroStatus = '';
+
+function sair(){ localStorage.clear(); window.location.href = '/login'; }
+function headers(){ return {'Authorization':'Bearer '+token}; }
+
+function carregar(){
+  Promise.all([
+    fetch(API+'/api/sensores', {headers:headers()}).then(function(r){return r.json();}),
+    fetch(API+'/api/sensores/resumo', {headers:headers()}).then(function(r){return r.json();})
+  ]).then(function(results){
+    todosSensores = results[0];
+    var r = results[1];
+    document.getElementById('kv-total').textContent   = r.total || 0;
+    document.getElementById('kv-ok').textContent      = r.ok || 0;
+    document.getElementById('kv-down').textContent    = r.down || 0;
+    document.getElementById('kv-aviso').textContent   = r.aviso || 0;
+    document.getElementById('kv-incomum').textContent = r.incomum || 0;
+    document.getElementById('kv-pausado').textContent = r.pausado || 0;
+    document.getElementById('sync-info').textContent  = 'último sync: '+new Date().toLocaleTimeString('pt-BR');
+    renderFiltrado();
+  }).catch(function(){});
+}
+
+function filtrarStatus(status, el){
+  filtroStatus = status;
+  document.querySelectorAll('.kpi-mini').forEach(function(k){ k.classList.remove('ativo'); });
+  el.classList.add('ativo');
+  renderFiltrado();
+}
+
+function renderFiltrado(){
+  var busca = document.getElementById('busca').value.toLowerCase();
+  var lista = todosSensores.filter(function(s){
+    var matchStatus = !filtroStatus || s.status === filtroStatus;
+    var matchBusca  = !busca ||
+      (s.nome||'').toLowerCase().includes(busca) ||
+      (s.device||'').toLowerCase().includes(busca) ||
+      (s.group_name||'').toLowerCase().includes(busca);
+    return matchStatus && matchBusca;
+  });
+
+  // Ordenar: DOWN primeiro, depois Aviso, depois resto
+  lista.sort(function(a,b){
+    var ord = {DOWN:0,Aviso:1,Incomum:2,OK:3,Pausado:4};
+    return (ord[a.status]||5) - (ord[b.status]||5);
+  });
+
+  var grid = document.getElementById('sensores-grid');
+  if(!lista.length){
+    grid.innerHTML = '<div class="empty">Nenhum sensor encontrado</div>';
+    return;
+  }
+
+  var html = '';
+  lista.forEach(function(s){
+    var st = (s.status||'').toLowerCase();
+    var dotCls = st === 'down' ? 'dot-down' : st === 'aviso' ? 'dot-aviso' :
+      st === 'incomum' ? 'dot-incomum' : st === 'pausado' ? 'dot-pausado' : 'dot-ok';
+    var badgeCls = st === 'down' ? 'bs-down' : st === 'aviso' ? 'bs-aviso' :
+      st === 'incomum' ? 'bs-incomum' : st === 'pausado' ? 'bs-pausado' : 'bs-ok';
+    var tempo = s.status === 'DOWN' && s.down_desde
+      ? '<span class="sc-tempo">DOWN há '+tempoDecorrido(s.down_desde)+'</span>' : '';
+
+    html += '<div class="sensor-card '+st+'">' +
+      '<div class="sc-header">' +
+        '<span class="sc-dot '+dotCls+'"></span>' +
+        '<span class="sc-nome">'+esc(s.nome)+'</span>' +
+      '</div>' +
+      '<div class="sc-device">'+esc(s.device)+(s.group_name?' · '+esc(s.group_name):'')+'</div>' +
+      '<div class="sc-footer">' +
+        '<span class="sc-valor">'+esc(s.ultimo_valor||'—')+'</span>' +
+        (tempo || '<span class="badge-status '+badgeCls+'">'+esc(s.status)+'</span>') +
+      '</div>' +
+    '</div>';
+  });
+  grid.innerHTML = html;
+}
+
+function tempoDecorrido(dtStr){
+  if(!dtStr) return '—';
+  var d = new Date(dtStr.replace(' ','T'));
+  var diff = Math.floor((Date.now() - d.getTime()) / 60000);
+  if(diff < 60) return diff+'min';
+  return Math.floor(diff/60)+'h'+(diff%60)+'m';
+}
+
+function esc(s){return (s||'').replace(/[&<>"']/g,function(c){
+  return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+carregar();
+setInterval(carregar, 30000);
+</script>
+</body>
+</html>
